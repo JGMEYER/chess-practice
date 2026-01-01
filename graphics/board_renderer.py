@@ -12,6 +12,8 @@ from .constants import (
     LABEL_MARGIN,
     BOARD_OFFSET_X,
     BOARD_OFFSET_Y,
+    SELECTED_SQUARE,
+    VALID_MOVE_DOT,
 )
 
 
@@ -28,18 +30,27 @@ class BoardRenderer:
             pygame.font.init()
             self._font = pygame.font.SysFont("Arial", 14, bold=True)
 
-    def draw_board(self, surface: pygame.Surface) -> None:
+    def draw_board(
+        self,
+        surface: pygame.Surface,
+        selected_square: tuple[int, int] | None = None,
+    ) -> None:
         """
         Draw the chess board squares.
 
         Args:
             surface: The pygame surface to draw on
+            selected_square: Optional (file, rank) of selected square to highlight
         """
         for file in range(BOARD_SIZE):
             for rank in range(BOARD_SIZE):
-                # Determine square color (light if file+rank is even)
-                is_light = (file + rank) % 2 == 1
-                color = LIGHT_SQUARE if is_light else DARK_SQUARE
+                # Determine square color
+                if selected_square and (file, rank) == selected_square:
+                    color = SELECTED_SQUARE
+                elif (file + rank) % 2 == 1:
+                    color = LIGHT_SQUARE
+                else:
+                    color = DARK_SQUARE
 
                 # Calculate pixel position
                 x = BOARD_OFFSET_X + file * SQUARE_SIZE
@@ -74,13 +85,46 @@ class BoardRenderer:
             y = BOARD_OFFSET_Y + (BOARD_SIZE - 1 - rank) * SQUARE_SIZE + (SQUARE_SIZE - text.get_height()) // 2
             surface.blit(text, (x, y))
 
-    def draw(self, surface: pygame.Surface) -> None:
+    def draw_valid_moves(
+        self,
+        surface: pygame.Surface,
+        valid_moves: list[tuple[int, int]],
+    ) -> None:
         """
-        Draw the complete board with labels.
+        Draw dots on valid move squares.
 
         Args:
             surface: The pygame surface to draw on
+            valid_moves: List of (file, rank) tuples for valid destinations
+        """
+        dot_radius = SQUARE_SIZE // 6
+
+        for file, rank in valid_moves:
+            # Calculate center of square
+            x = BOARD_OFFSET_X + file * SQUARE_SIZE + SQUARE_SIZE // 2
+            y = BOARD_OFFSET_Y + (BOARD_SIZE - 1 - rank) * SQUARE_SIZE + SQUARE_SIZE // 2
+
+            # Draw semi-transparent dot
+            dot_surface = pygame.Surface((dot_radius * 2, dot_radius * 2), pygame.SRCALPHA)
+            pygame.draw.circle(dot_surface, VALID_MOVE_DOT, (dot_radius, dot_radius), dot_radius)
+            surface.blit(dot_surface, (x - dot_radius, y - dot_radius))
+
+    def draw(
+        self,
+        surface: pygame.Surface,
+        selected_square: tuple[int, int] | None = None,
+        valid_moves: list[tuple[int, int]] | None = None,
+    ) -> None:
+        """
+        Draw the complete board with labels and highlights.
+
+        Args:
+            surface: The pygame surface to draw on
+            selected_square: Optional (file, rank) of selected square
+            valid_moves: Optional list of valid move squares to highlight
         """
         surface.fill(BACKGROUND)
-        self.draw_board(surface)
+        self.draw_board(surface, selected_square)
         self.draw_labels(surface)
+        if valid_moves:
+            self.draw_valid_moves(surface, valid_moves)

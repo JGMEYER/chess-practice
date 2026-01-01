@@ -5,6 +5,10 @@ BACKGROUND = (48, 46, 43)  # #302E2B - dark gray
 HIGHLIGHT = (205, 210, 106)  # #CDD26A - yellow (for future use)
 LABEL_COLOR = (134, 133, 126)  # #86857E - gray
 
+# Selection colors
+SELECTED_SQUARE = (244, 246, 128)  # Bright yellow for selected piece
+VALID_MOVE_DOT = (128, 128, 128, 128)  # Semi-transparent gray dot
+
 # Board dimensions
 SQUARE_SIZE = 80
 BOARD_SIZE = 8
