@@ -1,6 +1,8 @@
 import pygame
 
 from chess import Board, MoveGenerator
+from chess.game_state import GameState
+from chess.move import Move
 from graphics import BoardRenderer, PieceRenderer, SpriteLoader
 from graphics.constants import (
     LABEL_MARGIN,
@@ -44,6 +46,8 @@ def main():
     board = Board()
     board.setup_initial_position()
 
+    game_state = GameState()
+
     sprite_loader = SpriteLoader(SPRITE_PATH)
     board_renderer = BoardRenderer()
     piece_renderer = PieceRenderer(sprite_loader)
@@ -65,9 +69,19 @@ def main():
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:  # Left click
                     clicked_square = pixel_to_square(*event.pos)
-
-                    if clicked_square is None:
-                        # Clicked outside board
+                    
+                    if clicked_square in valid_moves:
+                        # Execute valid move
+                        piece = board.get_piece(*selected_square)
+                        target_piece = board.get_piece(*clicked_square)
+                        move = Move(selected_square, clicked_square, piece, target_piece)
+                        board.set_piece(*selected_square, None)
+                        board.set_piece(*clicked_square, piece)
+                        game_state.record_move(move)
+                        selected_square = None
+                        valid_moves = []
+                    elif clicked_square is None:
+                        # Clicked outside board - deselect
                         selected_square = None
                         valid_moves = []
                     elif selected_square == clicked_square:
@@ -75,9 +89,9 @@ def main():
                         selected_square = None
                         valid_moves = []
                     else:
-                        # Check if there's a piece on the clicked square
+                        # Check if there's a moveable piece on the clicked square
                         piece = board.get_piece(*clicked_square)
-                        if piece is not None:
+                        if piece is not None and piece.color == game_state.current_turn:
                             # Select this piece
                             selected_square = clicked_square
                             valid_moves = move_generator.get_valid_moves(board, piece)
