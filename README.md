@@ -1,6 +1,6 @@
 # Python Practice
 
-A Python project for practicing and experimenting with Python code.
+A Python project for practicing and experimenting with Python code, including a chess game built with Pygame.
 
 ## Requirements
 
@@ -51,11 +51,38 @@ Update all dependencies:
 poetry update
 ```
 
+## Chess Game
+
+Run the chess game:
+```bash
+python -m poetry run python chess_game.py
+```
+
+## Running Tests
+
+```bash
+python -m poetry run pytest tests/ -v
+```
+
 ## Project Structure
 
 ```
 python-practice/
 ├── .venv/              # Virtual environment (in-project)
+├── assets/
+│   └── sprites/        # Chess piece sprites (SVG)
+├── chess/              # Chess game logic (pure Python)
+│   ├── board.py        # Board state management
+│   ├── constants.py    # PieceType and Color enums
+│   ├── piece.py        # Base Piece class
+│   └── pieces/         # Individual piece classes
+├── graphics/           # Pygame rendering
+│   ├── board_renderer.py
+│   ├── constants.py    # Colors and dimensions
+│   ├── piece_renderer.py
+│   └── sprites.py      # SVG sprite loader
+├── tests/              # Pytest test suite
+├── chess_game.py       # Chess game entry point
 ├── main.py             # Main script
 ├── poetry.lock         # Locked dependency versions
 ├── pyproject.toml      # Project configuration
