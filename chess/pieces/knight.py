@@ -6,3 +6,8 @@ class Knight(Piece):
     """The Knight piece."""
 
     piece_type = PieceType.KNIGHT
+    move_offsets = [
+        (2, 1), (2, -1), (-2, 1), (-2, -1),
+        (1, 2), (1, -2), (-1, 2), (-1, -2),
+    ]
+    is_sliding = False

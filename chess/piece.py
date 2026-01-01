@@ -7,6 +7,8 @@ class Piece:
     """Base class for all chess pieces."""
 
     piece_type: PieceType  # To be set by subclasses
+    move_offsets: list[tuple[int, int]] = []  # Movement pattern offsets
+    is_sliding: bool = False  # True for rook, bishop, queen
 
     def __init__(self, color: Color, position: tuple[int, int] | None = None):
         """
