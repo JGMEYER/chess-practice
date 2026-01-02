@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .constants import Color
+from .constants import Color, PieceType
 from .move import Move
 from .piece import Piece
 
@@ -17,6 +17,26 @@ class GameState:
     def last_move(self) -> Move | None:
         """Get the last move played, or None if no moves yet."""
         return self.move_history[-1] if self.move_history else None
+    
+    @property
+    def current_en_passant_target(self) -> tuple[int, int]:
+        """Get the current en passant target, or None if no target"""
+        return (
+            self.move_history[-1].current_en_passant_target
+            if self.move_history else None
+        )
+    
+    @property
+    def current_en_passant_taking_square(self) -> tuple[int, int]:
+        """Get the current en passant taking square, or None if no target"""
+        en_passant_target = self.current_en_passant_target
+        forward_offset = 1 if self.current_turn == Color.WHITE else -1
+
+        if not en_passant_target:
+            return None
+
+        target_file, target_rank = en_passant_target
+        return (target_file, target_rank+forward_offset)
 
     def record_move(self, move: Move) -> None:
         """

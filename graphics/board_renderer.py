@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import pygame
 
+from chess.board import Board
+from graphics.piece_renderer import PieceRenderer
+
 from .constants import (
     LIGHT_SQUARE,
     DARK_SQUARE,
@@ -20,9 +23,10 @@ from .constants import (
 class BoardRenderer:
     """Renders the chess board squares and labels."""
 
-    def __init__(self):
+    def __init__(self, piece_renderer: PieceRenderer):
         """Initialize the board renderer."""
         self._font: pygame.font.Font | None = None
+        self._piece_renderer = piece_renderer
 
     def _ensure_font(self) -> None:
         """Initialize the font if not already done."""
@@ -112,6 +116,7 @@ class BoardRenderer:
     def draw(
         self,
         surface: pygame.Surface,
+        board: Board,
         selected_square: tuple[int, int] | None = None,
         valid_moves: list[tuple[int, int]] | None = None,
     ) -> None:
@@ -120,11 +125,13 @@ class BoardRenderer:
 
         Args:
             surface: The pygame surface to draw on
+            board: The board with piece positions
             selected_square: Optional (file, rank) of selected square
             valid_moves: Optional list of valid move squares to highlight
         """
         surface.fill(BACKGROUND)
         self.draw_board(surface, selected_square)
         self.draw_labels(surface)
+        self._piece_renderer.draw_pieces(surface, board)
         if valid_moves:
             self.draw_valid_moves(surface, valid_moves)
