@@ -1,8 +1,11 @@
 from __future__ import annotations
 
-from .constants import Color
+from typing import TYPE_CHECKING
+
 from .piece import Piece
-from .pieces import King, Queen, Bishop, Knight, Rook, Pawn
+
+if TYPE_CHECKING:
+    from .fen import FENData
 
 
 class Board:
@@ -51,24 +54,16 @@ class Board:
             for rank in range(8):
                 self._grid[file][rank] = None
 
-    def setup_initial_position(self) -> None:
-        """Set up the standard chess starting position."""
+    def load_from_fen_data(self, fen_data: FENData) -> None:
+        """
+        Load board position from parsed FEN data.
+
+        Args:
+            fen_data: Parsed FEN data containing piece positions
+        """
         self.clear()
-
-        # Define back rank piece order (from a-file to h-file)
-        back_rank_pieces = [Rook, Knight, Bishop, Queen, King, Bishop, Knight, Rook]
-
-        # Place white pieces (ranks 0 and 1)
-        for file, piece_class in enumerate(back_rank_pieces):
-            self.set_piece(file, 0, piece_class(Color.WHITE))
-        for file in range(8):
-            self.set_piece(file, 1, Pawn(Color.WHITE))
-
-        # Place black pieces (ranks 7 and 6)
-        for file, piece_class in enumerate(back_rank_pieces):
-            self.set_piece(file, 7, piece_class(Color.BLACK))
-        for file in range(8):
-            self.set_piece(file, 6, Pawn(Color.BLACK))
+        for (file, rank), piece in fen_data.pieces.items():
+            self.set_piece(file, rank, piece)
 
     def __iter__(self):
         """Iterate over all squares, yielding (file, rank, piece) tuples."""

@@ -1,7 +1,15 @@
 import pytest
 
-from chess import Board, Color, PieceType
+from chess import Board, Color, PieceType, FENLoader
+from chess.game_state import GameState
 from chess.pieces import King, Queen, Rook, Pawn
+
+
+def _load_starting_position(board: Board) -> None:
+    """Helper to load the starting position via FENLoader."""
+    game_state = GameState()
+    loader = FENLoader(board, game_state)
+    loader.load_starting_position()
 
 
 class TestBoard:
@@ -70,7 +78,7 @@ class TestBoard:
     def test_initial_position_white_pieces(self):
         """Initial position should have white pieces on ranks 0 and 1."""
         board = Board()
-        board.setup_initial_position()
+        _load_starting_position(board)
 
         # Check white back rank
         assert board.get_piece(0, 0).piece_type == PieceType.ROOK
@@ -95,7 +103,7 @@ class TestBoard:
     def test_initial_position_black_pieces(self):
         """Initial position should have black pieces on ranks 6 and 7."""
         board = Board()
-        board.setup_initial_position()
+        _load_starting_position(board)
 
         # Check black back rank
         assert board.get_piece(0, 7).piece_type == PieceType.ROOK
@@ -114,7 +122,7 @@ class TestBoard:
     def test_initial_position_empty_middle(self):
         """Initial position should have empty squares in the middle."""
         board = Board()
-        board.setup_initial_position()
+        _load_starting_position(board)
 
         for rank in range(2, 6):
             for file in range(8):

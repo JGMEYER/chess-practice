@@ -1,6 +1,6 @@
 import pygame
 
-from chess import Board, MoveGenerator, MoveExecutor
+from chess import Board, MoveGenerator, MoveExecutor, FENLoader
 from chess.game_state import GameState
 from graphics import BoardRenderer, PieceRenderer, SpriteLoader
 from graphics.constants import (
@@ -43,9 +43,9 @@ def main():
 
     # Initialize game components
     board = Board()
-    board.setup_initial_position()
-
     game_state = GameState()
+    fen_loader = FENLoader(board, game_state)
+    fen_loader.load_starting_position()
 
     sprite_loader = SpriteLoader(SPRITE_PATH)
     piece_renderer = PieceRenderer(sprite_loader)
@@ -69,7 +69,7 @@ def main():
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:  # Left click
                     clicked_square = pixel_to_square(*event.pos)
-                    
+
                     if clicked_square in valid_moves:
                         move_executor.execute_move(selected_square, clicked_square)
                         selected_square = None
@@ -85,10 +85,15 @@ def main():
                     else:
                         # Check if there's a moveable piece on the clicked square
                         piece = board.get_piece(*clicked_square)
-                        if piece is not None and piece.color == game_state.current_turn:
+                        if (
+                            piece is not None
+                            and piece.color == game_state.current_turn
+                        ):
                             # Select this piece
                             selected_square = clicked_square
-                            valid_moves = move_generator.get_valid_moves(board, piece, game_state)
+                            valid_moves = move_generator.get_valid_moves(
+                                board, piece, game_state
+                            )
                         else:
                             # Clicked empty square - deselect
                             selected_square = None

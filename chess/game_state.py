@@ -1,8 +1,13 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from .constants import Color, PieceType
 from .move import Move
 from .piece import Piece
+
+if TYPE_CHECKING:
+    from .fen import CastlingRights, FENData
 
 
 class GameState:
@@ -12,6 +17,23 @@ class GameState:
         """Initialize a new game state."""
         self.move_history: list[Move] = []
         self.current_turn: Color = Color.WHITE
+        self._castling_rights: CastlingRights | None = None
+        self.halfmove_clock: int = 0
+        self.fullmove_number: int = 1
+        self._initial_en_passant_target: tuple[int, int] | None = None
+
+    @property
+    def castling_rights(self) -> CastlingRights:
+        """Get castling rights, creating default if not set."""
+        if self._castling_rights is None:
+            from .fen import CastlingRights
+            self._castling_rights = CastlingRights()
+        return self._castling_rights
+
+    @castling_rights.setter
+    def castling_rights(self, value: CastlingRights) -> None:
+        """Set castling rights."""
+        self._castling_rights = value
 
     @property
     def last_move(self) -> Move | None:
@@ -21,10 +43,9 @@ class GameState:
     @property
     def current_en_passant_target(self) -> tuple[int, int] | None:
         """Get the current en passant target, or None if no target."""
-        return (
-            self.move_history[-1].current_en_passant_target
-            if self.move_history else None
-        )
+        if self.move_history:
+            return self.move_history[-1].current_en_passant_target
+        return self._initial_en_passant_target
     
     @property
     def current_en_passant_taking_square(self) -> tuple[int, int] | None:
@@ -63,3 +84,26 @@ class GameState:
     def move_count(self) -> int:
         """Get the total number of moves played."""
         return len(self.move_history)
+
+    def reset(self) -> None:
+        """Reset to initial state."""
+        self.move_history.clear()
+        self.current_turn = Color.WHITE
+        self._castling_rights = None
+        self.halfmove_clock = 0
+        self.fullmove_number = 1
+        self._initial_en_passant_target = None
+
+    def load_from_fen_data(self, fen_data: FENData) -> None:
+        """
+        Load game state from parsed FEN data.
+
+        Args:
+            fen_data: Parsed FEN data containing game state
+        """
+        self.reset()
+        self.current_turn = fen_data.active_color
+        self.castling_rights = fen_data.castling_rights
+        self.halfmove_clock = fen_data.halfmove_clock
+        self.fullmove_number = fen_data.fullmove_number
+        self._initial_en_passant_target = fen_data.en_passant_target

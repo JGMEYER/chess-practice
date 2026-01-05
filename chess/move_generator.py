@@ -138,7 +138,7 @@ class MoveGenerator:
         return 0 <= file < 8 and 0 <= rank < 8
 
     def get_all_moves(
-        self, board: Board, color: Color
+        self, board: Board, color: Color, game_state: GameState
     ) -> dict[Piece, list[tuple[int, int]]]:
         """
         Get all valid moves for all pieces of a color.
@@ -146,6 +146,7 @@ class MoveGenerator:
         Args:
             board: The current board state
             color: The color to get moves for
+            game_state: The current game state
 
         Returns:
             Dictionary mapping pieces to their valid moves
@@ -154,7 +155,7 @@ class MoveGenerator:
 
         for file, rank, piece in board:
             if piece is not None and piece.color == color:
-                moves = self.get_valid_moves(board, piece)
+                moves = self.get_valid_moves(board, piece, game_state)
                 if moves:
                     all_moves[piece] = moves
 
