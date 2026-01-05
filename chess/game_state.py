@@ -19,16 +19,16 @@ class GameState:
         return self.move_history[-1] if self.move_history else None
     
     @property
-    def current_en_passant_target(self) -> tuple[int, int]:
-        """Get the current en passant target, or None if no target"""
+    def current_en_passant_target(self) -> tuple[int, int] | None:
+        """Get the current en passant target, or None if no target."""
         return (
             self.move_history[-1].current_en_passant_target
             if self.move_history else None
         )
     
     @property
-    def current_en_passant_taking_square(self) -> tuple[int, int]:
-        """Get the current en passant taking square, or None if no target"""
+    def current_en_passant_taking_square(self) -> tuple[int, int] | None:
+        """Get the current en passant taking square, or None if no target."""
         en_passant_target = self.current_en_passant_target
         forward_offset = 1 if self.current_turn == Color.WHITE else -1
 

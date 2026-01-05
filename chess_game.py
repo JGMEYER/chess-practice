@@ -1,9 +1,7 @@
 import pygame
 
-from chess import Board, MoveGenerator
-from chess.constants import PieceType
+from chess import Board, MoveGenerator, MoveExecutor
 from chess.game_state import GameState
-from chess.move import Move
 from graphics import BoardRenderer, PieceRenderer, SpriteLoader
 from graphics.constants import (
     LABEL_MARGIN,
@@ -53,6 +51,7 @@ def main():
     piece_renderer = PieceRenderer(sprite_loader)
     board_renderer = BoardRenderer(piece_renderer)
     move_generator = MoveGenerator()
+    move_executor = MoveExecutor(board, game_state)
 
     clock = pygame.time.Clock()
 
@@ -72,33 +71,7 @@ def main():
                     clicked_square = pixel_to_square(*event.pos)
                     
                     if clicked_square in valid_moves:
-                        from_square = selected_square
-                        to_square = clicked_square
-
-                        piece = board.get_piece(*from_square)
-                        target_piece = board.get_piece(*to_square)
-                        en_passant_taking_square = game_state.current_en_passant_taking_square
-
-                        # Execute normal move
-                        board.set_piece(*from_square, None)
-                        board.set_piece(*to_square, piece)
-
-                        if (en_passant_taking_square
-                            and piece.piece_type == PieceType.PAWN
-                            and to_square == en_passant_taking_square):
-                            # Additionally take target if en passant
-                            board.set_piece(*game_state.current_en_passant_target, None)
-
-                        # Pawn has moved two spaces and subject to en passant next turn
-                        new_en_passant_target = to_square if (
-                                    piece.piece_type == PieceType.PAWN
-                                    and abs(to_square[1] - from_square[1]) == 2
-                                ) else None
-
-                        move = Move(from_square, to_square, piece, target_piece,
-                                    new_en_passant_target)
-                        game_state.record_move(move)
-
+                        move_executor.execute_move(selected_square, clicked_square)
                         selected_square = None
                         valid_moves = []
                     elif clicked_square is None:
