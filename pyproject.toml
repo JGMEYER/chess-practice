@@ -2,7 +2,7 @@
 package-mode = false
 
 [project]
-name = "python-practice"
+name = "chess-practice"
 version = "0.1.0"
 description = ""
 authors = [

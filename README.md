@@ -1,6 +1,6 @@
-# Python Practice
+# Chess Practice
 
-A Python project for practicing and experimenting with Python code, including a chess game built with Pygame.
+A chess game built with Pygame for practicing and experimenting with Python code.
 
 ## Requirements
 
@@ -67,7 +67,7 @@ python -m poetry run pytest tests/ -v
 ## Project Structure
 
 ```
-python-practice/
+chess-practice/
 ├── .venv/              # Virtual environment (in-project)
 ├── assets/
 │   └── sprites/        # Chess piece sprites (SVG)
