@@ -1,0 +1,13 @@
+{
+    "UIDropDownMenu": {
+        "misc": {
+            "expand_direction": "down",
+            "open_button_width": "0"
+        }
+    },
+    "UISelectionList": {
+        "misc": {
+            "list_item_height": "25"
+        }
+    }
+}

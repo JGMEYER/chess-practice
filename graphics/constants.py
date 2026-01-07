@@ -13,6 +13,7 @@ VALID_MOVE_DOT = (128, 128, 128, 128)  # Semi-transparent gray dot
 SQUARE_SIZE = 80
 BOARD_SIZE = 8
 LABEL_MARGIN = 24  # Space for rank/file labels
+MENU_BAR_HEIGHT = 30
 
 # Calculated dimensions
 BOARD_PIXEL_SIZE = SQUARE_SIZE * BOARD_SIZE  # 640px
@@ -20,4 +21,4 @@ WINDOW_SIZE = BOARD_PIXEL_SIZE + LABEL_MARGIN  # 664px
 
 # Board position (offset from window origin)
 BOARD_OFFSET_X = LABEL_MARGIN
-BOARD_OFFSET_Y = 0
+BOARD_OFFSET_Y = MENU_BAR_HEIGHT

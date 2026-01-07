@@ -1,8 +1,10 @@
 import pygame
+import pygame_gui
 
 from chess import Board, MoveGenerator, MoveExecutor, FENLoader
 from chess.game_state import GameState
 from graphics import BoardRenderer, PieceRenderer, SpriteLoader
+from graphics.ui import MenuBar, FENDialog, show_error_dialog
 from graphics.constants import (
     LABEL_MARGIN,
     BOARD_PIXEL_SIZE,
@@ -10,11 +12,12 @@ from graphics.constants import (
     BOARD_OFFSET_X,
     BOARD_OFFSET_Y,
     BOARD_SIZE,
+    MENU_BAR_HEIGHT,
 )
 
-# Window dimensions: board + margins for labels
+# Window dimensions: board + margins for labels + menu bar
 WINDOW_WIDTH = BOARD_PIXEL_SIZE + LABEL_MARGIN
-WINDOW_HEIGHT = BOARD_PIXEL_SIZE + LABEL_MARGIN
+WINDOW_HEIGHT = BOARD_PIXEL_SIZE + LABEL_MARGIN + MENU_BAR_HEIGHT
 
 SPRITE_PATH = "assets/sprites/Chess_Pieces_Sprite.svg"
 
@@ -41,6 +44,15 @@ def main():
     screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
     pygame.display.set_caption("Chess")
 
+    # Initialize pygame_gui
+    ui_manager = pygame_gui.UIManager(
+        (WINDOW_WIDTH, WINDOW_HEIGHT), "assets/theme.json"
+    )
+
+    # Initialize UI components
+    menu_bar = MenuBar(ui_manager, WINDOW_WIDTH)
+    fen_dialog: FENDialog | None = None
+
     # Initialize game components
     board = Board()
     game_state = GameState()
@@ -62,11 +74,45 @@ def main():
     # Game loop
     running = True
     while running:
+        time_delta = clock.tick(60) / 1000.0
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
 
-            elif event.type == pygame.MOUSEBUTTONDOWN:
+            # Process UI events
+            ui_manager.process_events(event)
+
+            # Handle menu bar actions
+            action = menu_bar.process_event(event)
+            if action == "load_fen":
+                fen_dialog = FENDialog(ui_manager, (WINDOW_WIDTH, WINDOW_HEIGHT))
+
+            # Handle FEN dialog events
+            if fen_dialog is not None and event.type == pygame_gui.UI_BUTTON_PRESSED:
+                if event.ui_element == fen_dialog.ok_button:
+                    fen_string = fen_dialog.get_fen_string()
+                    try:
+                        fen_loader.load(fen_string)
+                        selected_square = None
+                        valid_moves = []
+                    except ValueError as e:
+                        show_error_dialog(
+                            ui_manager, (WINDOW_WIDTH, WINDOW_HEIGHT), str(e)
+                        )
+                    fen_dialog.kill()
+                    fen_dialog = None
+                elif event.ui_element == fen_dialog.cancel_button:
+                    fen_dialog.kill()
+                    fen_dialog = None
+
+            # Handle window close events (for dialogs)
+            if event.type == pygame_gui.UI_WINDOW_CLOSE:
+                if fen_dialog is not None and event.ui_element == fen_dialog:
+                    fen_dialog = None
+
+            # Handle board clicks (only when no dialog is open)
+            if fen_dialog is None and event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:  # Left click
                     clicked_square = pixel_to_square(*event.pos)
 
@@ -99,11 +145,13 @@ def main():
                             selected_square = None
                             valid_moves = []
 
+        # Update UI
+        ui_manager.update(time_delta)
+
         # Draw
         board_renderer.draw(screen, board, selected_square, valid_moves)
+        ui_manager.draw_ui(screen)
         pygame.display.flip()
-
-        clock.tick(60)
 
     pygame.quit()
 
