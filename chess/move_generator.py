@@ -12,12 +12,13 @@ from .pieces.queen import Queen
 class MoveGenerator:
     """Generates valid moves for chess pieces."""
 
-    def get_valid_moves(self, board: Board, piece: Piece, game_state: GameState) -> list[tuple[int, int]]:
+    def get_possible_moves(self, board: Board, piece: Piece, game_state: GameState) -> list[tuple[int, int]]:
         """
-        Get all pseudo-legal moves for a piece.
+        Get all possible moves for a piece based on its movement rules.
 
-        Pseudo-legal moves follow the piece's movement rules but may leave the
-        king in check. Use get_legal_moves() for fully legal moves.
+        These moves follow the piece's movement patterns but may leave the
+        king in check. Use get_legal_moves() for fully legal moves that
+        respect check rules.
 
         For sliding pieces (is_sliding=True):
           - Repeat each offset direction until hitting board edge or piece
@@ -59,8 +60,8 @@ class MoveGenerator:
         """
         Get all legal moves for a piece (filtering out moves that leave king in check).
 
-        This is the main public method for move generation. It generates pseudo-legal
-        moves using get_valid_moves(), then filters out moves that would leave the
+        This is the main public method for move generation. It generates possible
+        moves using get_possible_moves(), then filters out moves that would leave the
         player's king in check.
 
         Args:
@@ -72,7 +73,7 @@ class MoveGenerator:
             List of (file, rank) tuples representing legal destination squares
         """
         # Get pseudo-legal moves
-        pseudo_legal_moves = self.get_valid_moves(board, piece, game_state)
+        pseudo_legal_moves = self.get_possible_moves(board, piece, game_state)
 
         # Filter out moves that would leave king in check
         legal_moves = []

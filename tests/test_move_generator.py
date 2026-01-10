@@ -29,7 +29,7 @@ class TestKnightMoves:
         knight = Knight(Color.WHITE)
         empty_board.set_piece(4, 4, knight)  # e5
 
-        moves = move_gen.get_valid_moves(empty_board, knight, game_state)
+        moves = move_gen.get_possible_moves(empty_board, knight, game_state)
 
         assert len(moves) == 8
         expected = [
@@ -45,7 +45,7 @@ class TestKnightMoves:
         knight = Knight(Color.WHITE)
         empty_board.set_piece(0, 0, knight)  # a1
 
-        moves = move_gen.get_valid_moves(empty_board, knight, game_state)
+        moves = move_gen.get_possible_moves(empty_board, knight, game_state)
 
         assert len(moves) == 2
         expected = [(2, 1), (1, 2)]
@@ -58,7 +58,7 @@ class TestKnightMoves:
         empty_board.set_piece(4, 4, knight)
         empty_board.set_piece(6, 5, friendly_rook)  # Block one destination
 
-        moves = move_gen.get_valid_moves(empty_board, knight, game_state)
+        moves = move_gen.get_possible_moves(empty_board, knight, game_state)
 
         assert len(moves) == 7
         assert (6, 5) not in moves
@@ -70,7 +70,7 @@ class TestKnightMoves:
         empty_board.set_piece(4, 4, knight)
         empty_board.set_piece(6, 5, enemy_rook)
 
-        moves = move_gen.get_valid_moves(empty_board, knight, game_state)
+        moves = move_gen.get_possible_moves(empty_board, knight, game_state)
 
         assert len(moves) == 8
         assert (6, 5) in moves  # Can capture
@@ -84,7 +84,7 @@ class TestRookMoves:
         rook = Rook(Color.WHITE)
         empty_board.set_piece(4, 4, rook)  # e5
 
-        moves = move_gen.get_valid_moves(empty_board, rook, game_state)
+        moves = move_gen.get_possible_moves(empty_board, rook, game_state)
 
         # 7 squares in each direction (horizontal + vertical) = 14 total
         assert len(moves) == 14
@@ -96,7 +96,7 @@ class TestRookMoves:
         empty_board.set_piece(4, 4, rook)
         empty_board.set_piece(4, 6, friendly)  # Block upward
 
-        moves = move_gen.get_valid_moves(empty_board, rook, game_state)
+        moves = move_gen.get_possible_moves(empty_board, rook, game_state)
 
         # Can move to rank 5, but not 6 or 7
         assert (4, 5) in moves
@@ -110,7 +110,7 @@ class TestRookMoves:
         empty_board.set_piece(4, 4, rook)
         empty_board.set_piece(4, 6, enemy)  # Enemy upward
 
-        moves = move_gen.get_valid_moves(empty_board, rook, game_state)
+        moves = move_gen.get_possible_moves(empty_board, rook, game_state)
 
         # Can move to rank 5 and capture on 6, but not 7
         assert (4, 5) in moves
@@ -126,7 +126,7 @@ class TestRookMoves:
         empty_board.set_piece(5, 4, Rook(Color.WHITE))  # Block right
         empty_board.set_piece(3, 4, Rook(Color.WHITE))  # Block left
 
-        moves = move_gen.get_valid_moves(empty_board, rook, game_state)
+        moves = move_gen.get_possible_moves(empty_board, rook, game_state)
 
         assert len(moves) == 0
 
