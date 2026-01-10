@@ -137,7 +137,7 @@ def main():
                         ):
                             # Select this piece
                             selected_square = clicked_square
-                            valid_moves = move_generator.get_valid_moves(
+                            valid_moves = move_generator.get_legal_moves(
                                 board, piece, game_state
                             )
                         else:

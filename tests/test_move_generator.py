@@ -134,28 +134,28 @@ class TestRookMoves:
 class TestGetAllMoves:
     """Tests for getting all moves for a color."""
 
-    def test_get_all_moves_returns_pieces_with_moves(self, move_gen, empty_board, game_state):
-        """get_all_moves returns dict of pieces to their moves."""
+    def test_get_all_legal_moves_returns_pieces_with_moves(self, move_gen, empty_board, game_state):
+        """get_all_legal_moves returns dict of pieces to their moves."""
         knight = Knight(Color.WHITE)
         rook = Rook(Color.WHITE)
         empty_board.set_piece(0, 0, knight)
         empty_board.set_piece(7, 7, rook)
 
-        all_moves = move_gen.get_all_moves(empty_board, Color.WHITE, game_state)
+        all_moves = move_gen.get_all_legal_moves(empty_board, Color.WHITE, game_state)
 
         assert knight in all_moves
         assert rook in all_moves
         assert len(all_moves[knight]) == 2  # Corner knight
         assert len(all_moves[rook]) == 14  # Open rook
 
-    def test_get_all_moves_ignores_other_color(self, move_gen, empty_board, game_state):
-        """get_all_moves only returns moves for specified color."""
+    def test_get_all_legal_moves_ignores_other_color(self, move_gen, empty_board, game_state):
+        """get_all_legal_moves only returns moves for specified color."""
         white_knight = Knight(Color.WHITE)
         black_knight = Knight(Color.BLACK)
         empty_board.set_piece(4, 4, white_knight)
         empty_board.set_piece(0, 0, black_knight)
 
-        white_moves = move_gen.get_all_moves(empty_board, Color.WHITE, game_state)
+        white_moves = move_gen.get_all_legal_moves(empty_board, Color.WHITE, game_state)
 
         assert white_knight in white_moves
         assert black_knight not in white_moves

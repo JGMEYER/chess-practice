@@ -5,6 +5,8 @@ from chess.game_state import GameState
 from .board import Board
 from .piece import Piece
 from .constants import Color, PieceType
+from .pieces.knight import Knight
+from .pieces.queen import Queen
 
 
 class MoveGenerator:
@@ -12,7 +14,10 @@ class MoveGenerator:
 
     def get_valid_moves(self, board: Board, piece: Piece, game_state: GameState) -> list[tuple[int, int]]:
         """
-        Get all valid moves for a piece.
+        Get all pseudo-legal moves for a piece.
+
+        Pseudo-legal moves follow the piece's movement rules but may leave the
+        king in check. Use get_legal_moves() for fully legal moves.
 
         For sliding pieces (is_sliding=True):
           - Repeat each offset direction until hitting board edge or piece
@@ -28,7 +33,7 @@ class MoveGenerator:
             game_state: The current game state
 
         Returns:
-            List of (file, rank) tuples representing valid destination squares
+            List of (file, rank) tuples representing pseudo-legal destination squares
         """
         if piece.position is None:
             return []
@@ -47,7 +52,36 @@ class MoveGenerator:
                     moves.append(move)
 
         return moves
-    
+
+    def get_legal_moves(
+        self, board: Board, piece: Piece, game_state: GameState
+    ) -> list[tuple[int, int]]:
+        """
+        Get all legal moves for a piece (filtering out moves that leave king in check).
+
+        This is the main public method for move generation. It generates pseudo-legal
+        moves using get_valid_moves(), then filters out moves that would leave the
+        player's king in check.
+
+        Args:
+            board: The current board state
+            piece: The piece to get legal moves for
+            game_state: The current game state
+
+        Returns:
+            List of (file, rank) tuples representing legal destination squares
+        """
+        # Get pseudo-legal moves
+        pseudo_legal_moves = self.get_valid_moves(board, piece, game_state)
+
+        # Filter out moves that would leave king in check
+        legal_moves = []
+        for to_square in pseudo_legal_moves:
+            if not self._would_leave_king_in_check(board, piece, to_square, game_state):
+                legal_moves.append(to_square)
+
+        return legal_moves
+
     def _get_pawn_moves(
         self, board: Board, piece: Piece, game_state: GameState
     ) -> list[tuple[int, int]]:
@@ -137,11 +171,206 @@ class MoveGenerator:
         """Check if position is within board bounds."""
         return 0 <= file < 8 and 0 <= rank < 8
 
-    def get_all_moves(
+    def is_square_attacked(
+        self, board: Board, square: tuple[int, int], attacking_color: Color
+    ) -> bool:
+        """
+        Check if a square is under attack by pieces of the given color.
+
+        Uses a generalized "reverse perspective" algorithm: checks from the target
+        square outward in all possible directions. When a piece is found, checks if
+        that piece's move_offsets would allow it to reach back to the target square.
+
+        This approach works for any piece type without hardcoding specific piece logic.
+
+        Args:
+            board: The current board state
+            square: The square to check (file, rank)
+            attacking_color: The color of pieces that might attack the square
+
+        Returns:
+            True if the square is under attack, False otherwise
+        """
+        target_file, target_rank = square
+
+        # Check all possible directions (8 sliding directions + knight moves)
+        # For sliding pieces, we'll check along rays
+        # For non-sliding pieces (knight, king), we check direct positions
+
+        # All 8 sliding directions (orthogonal + diagonal)
+        sliding_directions = [
+            (1, 0), (-1, 0), (0, 1), (0, -1),  # Orthogonal
+            (1, 1), (1, -1), (-1, 1), (-1, -1)  # Diagonal
+        ]
+
+        for direction in sliding_directions:
+            check_file = target_file + direction[0]
+            check_rank = target_rank + direction[1]
+
+            # Slide in this direction until we hit a piece or edge
+            while self._is_on_board(check_file, check_rank):
+                piece = board.get_piece(check_file, check_rank)
+
+                if piece is not None:
+                    # Found a piece - check if it can attack back to our square
+                    if piece.color == attacking_color:
+                        # Check if this piece can attack in the reverse direction
+                        reverse_direction = (-direction[0], -direction[1])
+
+                        if reverse_direction in piece.move_offsets:
+                            # For sliding pieces, they can attack from any distance
+                            # For non-sliding pieces, check distance
+                            if piece.is_sliding:
+                                return True
+                            else:
+                                # Non-sliding piece - must be exactly one offset away
+                                distance = max(abs(piece.position[0] - target_file),
+                                             abs(piece.position[1] - target_rank))
+                                if distance == 1:
+                                    return True
+                    break  # Either found attacker or piece blocks further checks
+
+                # Continue sliding
+                check_file += direction[0]
+                check_rank += direction[1]
+
+        # Check for knight attacks (knight is non-sliding with L-shaped offsets)
+        for offset in Knight.move_offsets:
+            check_file = target_file + offset[0]
+            check_rank = target_rank + offset[1]
+
+            if not self._is_on_board(check_file, check_rank):
+                continue
+
+            piece = board.get_piece(check_file, check_rank)
+            if (piece is not None
+                and piece.color == attacking_color
+                and piece.piece_type == PieceType.KNIGHT):
+                return True
+
+        # Check for pawn attacks (special case - pawns attack differently than they move)
+        # Pawns are the only piece where move_offsets don't represent attacks
+        pawn_attack_rank_offset = -1 if attacking_color == Color.WHITE else 1
+        pawn_attack_offsets = [(-1, pawn_attack_rank_offset), (1, pawn_attack_rank_offset)]
+
+        for offset in pawn_attack_offsets:
+            check_file = target_file + offset[0]
+            check_rank = target_rank + offset[1]
+
+            if not self._is_on_board(check_file, check_rank):
+                continue
+
+            piece = board.get_piece(check_file, check_rank)
+            if (piece is not None
+                and piece.color == attacking_color
+                and piece.piece_type == PieceType.PAWN):
+                return True
+
+        return False
+
+    def _get_capture_square(
+        self, piece: Piece, to_square: tuple[int, int], game_state: GameState
+    ) -> tuple[int, int]:
+        """
+        Get the square where a captured piece is located.
+
+        For normal moves, this is the destination square. For en passant,
+        it's the en passant target square (where the pawn actually sits).
+
+        Args:
+            piece: The piece being moved
+            to_square: The destination square
+            game_state: The current game state
+
+        Returns:
+            The square where the captured piece is located
+        """
+        # En passant: captured pawn is at a different square than destination
+        if (piece.piece_type == PieceType.PAWN
+            and to_square == game_state.current_en_passant_taking_square):
+            return game_state.current_en_passant_target
+
+        # Normal move: capture is at destination square
+        return to_square
+
+    def _would_leave_king_in_check(
+        self, board: Board, piece: Piece, to_square: tuple[int, int], game_state: GameState
+    ) -> bool:
+        """
+        Check if a move would leave the player's king in check.
+
+        Simulates the move temporarily on the board, checks for check, then restores
+        the board state. Handles both normal captures and en passant captures.
+
+        Args:
+            board: The current board state
+            piece: The piece to move
+            to_square: The destination square
+            game_state: The current game state
+
+        Returns:
+            True if the move would leave the king in check, False otherwise
+        """
+        from_square = piece.position
+        capture_square = self._get_capture_square(piece, to_square, game_state)
+
+        # Save current board state (3 squares: from, to, and capture location)
+        saved_from = board.get_piece(*from_square)
+        saved_to = board.get_piece(*to_square)
+        saved_capture = board.get_piece(*capture_square)
+
+        # Apply the move
+        board.set_piece(*from_square, None)
+        board.set_piece(*to_square, piece)
+        if capture_square != to_square:  # En passant case
+            board.set_piece(*capture_square, None)
+
+        # Check for check
+        in_check = self.is_in_check(board, piece.color)
+
+        # Restore board state
+        board.set_piece(*from_square, saved_from)
+        board.set_piece(*to_square, saved_to)
+        if capture_square != to_square:  # En passant case
+            board.set_piece(*capture_square, saved_capture)
+
+        return in_check
+
+    def is_in_check(self, board: Board, color: Color) -> bool:
+        """
+        Check if the king of the given color is currently in check.
+
+        Args:
+            board: The current board state
+            color: The color of the king to check
+
+        Returns:
+            True if king is in check, False otherwise
+        """
+        # Find the king
+        king_position = None
+        for file, rank, piece in board:
+            if (piece is not None
+                and piece.color == color
+                and piece.piece_type == PieceType.KING):
+                king_position = (file, rank)
+                break
+
+        if king_position is None:
+            # No king found - shouldn't happen in normal game
+            return False
+
+        # Check if king's square is attacked by opponent
+        opponent_color = Color.BLACK if color == Color.WHITE else Color.WHITE
+        return self.is_square_attacked(board, king_position, opponent_color)
+
+    def get_all_legal_moves(
         self, board: Board, color: Color, game_state: GameState
     ) -> dict[Piece, list[tuple[int, int]]]:
         """
-        Get all valid moves for all pieces of a color.
+        Get all legal moves for all pieces of a color.
+
+        Returns only moves that don't leave the king in check.
 
         Args:
             board: The current board state
@@ -149,13 +378,13 @@ class MoveGenerator:
             game_state: The current game state
 
         Returns:
-            Dictionary mapping pieces to their valid moves
+            Dictionary mapping pieces to their legal moves
         """
         all_moves = {}
 
         for file, rank, piece in board:
             if piece is not None and piece.color == color:
-                moves = self.get_valid_moves(board, piece, game_state)
+                moves = self.get_legal_moves(board, piece, game_state)
                 if moves:
                     all_moves[piece] = moves
 
