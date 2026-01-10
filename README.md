@@ -10,6 +10,7 @@ A chess game built with Pygame for practicing and experimenting with Python code
 ## Setup
 
 1. Install dependencies and create virtual environment:
+
    ```bash
    poetry install
    ```
@@ -19,11 +20,13 @@ A chess game built with Pygame for practicing and experimenting with Python code
 ## Running Scripts
 
 Run Python scripts using Poetry:
+
 ```bash
 poetry run python main.py
 ```
 
 Or activate the virtual environment shell:
+
 ```bash
 poetry shell
 python main.py
@@ -32,21 +35,25 @@ python main.py
 ## Managing Dependencies
 
 Add a new dependency:
+
 ```bash
 poetry add <package-name>
 ```
 
 Add a development dependency:
+
 ```bash
 poetry add --group dev <package-name>
 ```
 
 Remove a dependency:
+
 ```bash
 poetry remove <package-name>
 ```
 
 Update all dependencies:
+
 ```bash
 poetry update
 ```
@@ -54,6 +61,7 @@ poetry update
 ## Chess Game
 
 Run the chess game:
+
 ```bash
 python -m poetry run python chess_game.py
 ```
@@ -88,3 +96,10 @@ chess-practice/
 ├── pyproject.toml      # Project configuration
 └── README.md
 ```
+
+## Roadmap
+
+- King check logic
+- Pawn promotion
+- AI move integration
+- AI analysis bar
