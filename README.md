@@ -99,7 +99,8 @@ chess-practice/
 
 ## Roadmap
 
-- King check logic
-- Pawn promotion
-- AI move integration
-- AI analysis bar
+- [x] King check logic
+- [x] Castling
+- [ ] Pawn promotion
+- [ ] AI move integration
+- [ ] AI analysis bar

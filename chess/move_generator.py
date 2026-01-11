@@ -81,7 +81,119 @@ class MoveGenerator:
             if not self._would_leave_king_in_check(board, piece, to_square, game_state):
                 legal_moves.append(to_square)
 
+        # Add castling moves for kings
+        if piece.piece_type == PieceType.KING:
+            castling_moves = self._get_castling_moves(board, piece, game_state)
+            legal_moves.extend(castling_moves)
+
         return legal_moves
+
+    def _get_castling_moves(
+        self, board: Board, king: Piece, game_state: GameState
+    ) -> list[tuple[int, int]]:
+        """
+        Get legal castling moves for the king.
+
+        Castling is legal when:
+        1. Neither the king nor the rook has previously moved (castling_rights)
+        2. There are no pieces between the king and the rook
+        3. The king is not currently in check
+        4. The king does not pass through or finish on a square attacked by enemy
+
+        Args:
+            board: The current board state
+            king: The king piece
+            game_state: The current game state
+
+        Returns:
+            List of (file, rank) tuples for legal castling destinations
+
+        Raises:
+            ValueError: If castling rights indicate rook should exist but doesn't
+        """
+        castling_moves = []
+
+        # Can't castle if king is in check (rule 3)
+        if self.is_in_check(board, king.color):
+            return castling_moves
+
+        file, rank = king.position
+        castling_rights = game_state.castling_rights
+
+        # Determine which castling rights to check based on color
+        if king.color == Color.WHITE:
+            can_kingside = castling_rights.white_kingside
+            can_queenside = castling_rights.white_queenside
+            king_start_rank = 0  # Rank 1 in chess notation
+        else:
+            can_kingside = castling_rights.black_kingside
+            can_queenside = castling_rights.black_queenside
+            king_start_rank = 7  # Rank 8 in chess notation
+
+        # King must be on starting square (e1 for white, e8 for black)
+        if file != 4 or rank != king_start_rank:
+            return castling_moves
+
+        # Check kingside castling (O-O)
+        if can_kingside:
+            # Check squares between king and rook are empty (f1/f8 and g1/g8)
+            if (board.get_piece(5, rank) is None and
+                board.get_piece(6, rank) is None):
+                # Check rook is in correct position (h1/h8)
+                rook = board.get_piece(7, rank)
+                if rook is None:
+                    raise ValueError(
+                        f"Invalid game state: castling rights indicate kingside castling "
+                        f"is available for {king.color.name}, but rook is missing at "
+                        f"{'h1' if king.color == Color.WHITE else 'h8'}"
+                    )
+                if (rook.piece_type != PieceType.ROOK or rook.color != king.color):
+                    raise ValueError(
+                        f"Invalid game state: expected {king.color.name} rook at "
+                        f"{'h1' if king.color == Color.WHITE else 'h8'} for kingside castling"
+                    )
+
+                # Check king doesn't pass through or end in check (rule 4)
+                # King moves from e to g, passing through f
+                opponent_color = Color.BLACK if king.color == Color.WHITE else Color.WHITE
+                f_square = (5, rank)  # f1/f8
+                g_square = (6, rank)  # g1/g8
+
+                if (not self.is_square_attacked(board, f_square, opponent_color) and
+                    not self.is_square_attacked(board, g_square, opponent_color)):
+                    castling_moves.append(g_square)
+
+        # Check queenside castling (O-O-O)
+        if can_queenside:
+            # Check squares between king and rook are empty (d1/d8, c1/c8, b1/b8)
+            if (board.get_piece(3, rank) is None and
+                board.get_piece(2, rank) is None and
+                board.get_piece(1, rank) is None):
+                # Check rook is in correct position (a1/a8)
+                rook = board.get_piece(0, rank)
+                if rook is None:
+                    raise ValueError(
+                        f"Invalid game state: castling rights indicate queenside castling "
+                        f"is available for {king.color.name}, but rook is missing at "
+                        f"{'a1' if king.color == Color.WHITE else 'a8'}"
+                    )
+                if (rook.piece_type != PieceType.ROOK or rook.color != king.color):
+                    raise ValueError(
+                        f"Invalid game state: expected {king.color.name} rook at "
+                        f"{'a1' if king.color == Color.WHITE else 'a8'} for queenside castling"
+                    )
+
+                # Check king doesn't pass through or end in check (rule 4)
+                # King moves from e to c, passing through d
+                opponent_color = Color.BLACK if king.color == Color.WHITE else Color.WHITE
+                d_square = (3, rank)  # d1/d8
+                c_square = (2, rank)  # c1/c8
+
+                if (not self.is_square_attacked(board, d_square, opponent_color) and
+                    not self.is_square_attacked(board, c_square, opponent_color)):
+                    castling_moves.append(c_square)
+
+        return castling_moves
 
     def _get_pawn_moves(
         self, board: Board, piece: Piece, game_state: GameState
