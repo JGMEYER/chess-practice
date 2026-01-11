@@ -58,6 +58,9 @@ class MoveExecutor:
         # Update game state
         self._update_castling_rights(piece, from_square, to_square)
 
+        # Clear redo history when making a new move
+        self.game_state.redo_history.clear()
+
         # Create and record move
         move = Move(**move_data)
         self.game_state.record_move(move)
@@ -267,6 +270,7 @@ class MoveExecutor:
             return None
 
         move = self.game_state.move_history.pop()
+        self.game_state.redo_history.append(move)
 
         # Restore pieces based on move type
         self._restore_main_piece(move)
@@ -303,3 +307,42 @@ class MoveExecutor:
         else:
             # Normal capture: restore to to_square
             self.board.set_piece(*move.to_square, move.captured_piece)
+
+    def redo_move(self) -> Move | None:
+        """
+        Redo a previously undone move.
+
+        Returns:
+            The redone Move, or None if no moves to redo
+        """
+        from .constants import Color
+
+        if not self.game_state.redo_history:
+            return None
+
+        move = self.game_state.redo_history.pop()
+
+        # Re-apply the move to the board
+        move_data = {
+            "from_square": move.from_square,
+            "to_square": move.to_square,
+            "piece": move.piece,
+            "is_castling": move.is_castling,
+            "castling_rook_from": move.castling_rook_from,
+            "castling_rook_to": move.castling_rook_to,
+            "is_en_passant": move.is_en_passant,
+        }
+        self._apply_move_to_board(move_data)
+
+        # Handle en passant capture removal
+        if move.is_en_passant and move.captured_piece:
+            captured_square = (move.to_square[0], move.from_square[1])
+            self.board.set_piece(*captured_square, None)
+
+        # Record move back to history and switch turn
+        self.game_state.move_history.append(move)
+        self.game_state.current_turn = (
+            Color.BLACK if move.piece.color == Color.WHITE else Color.WHITE
+        )
+
+        return move

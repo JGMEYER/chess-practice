@@ -78,6 +78,44 @@ class ControlPanel:
         # Calculate padding to center icons within buttons
         self.icon_padding = (CONTROL_BUTTON_SIZE - CONTROL_ICON_SIZE) // 2
 
+        # Create disabled (dimmed) versions of icons
+        self.undo_icon_disabled = self._create_disabled_icon(self.undo_icon)
+        self.redo_icon_disabled = self._create_disabled_icon(self.redo_icon)
+
+        # Track button states (start disabled)
+        self._undo_enabled = False
+        self._redo_enabled = False
+        self.undo_button.disable()
+        self.redo_button.disable()
+
+    def _create_disabled_icon(self, icon: pygame.Surface) -> pygame.Surface:
+        """Create a dimmed version of an icon for disabled state."""
+        disabled = icon.copy()
+        disabled.set_alpha(80)
+        return disabled
+
+    def update_button_states(self, can_undo: bool, can_redo: bool) -> None:
+        """
+        Update the enabled/disabled state of undo and redo buttons.
+
+        Args:
+            can_undo: Whether undo is available
+            can_redo: Whether redo is available
+        """
+        if can_undo != self._undo_enabled:
+            self._undo_enabled = can_undo
+            if can_undo:
+                self.undo_button.enable()
+            else:
+                self.undo_button.disable()
+
+        if can_redo != self._redo_enabled:
+            self._redo_enabled = can_redo
+            if can_redo:
+                self.redo_button.enable()
+            else:
+                self.redo_button.disable()
+
     def draw(self, screen: pygame.Surface) -> None:
         """
         Draw icons centered on top of buttons.
@@ -87,13 +125,15 @@ class ControlPanel:
         """
         padding = self.icon_padding
 
-        # Draw undo icon (centered in button)
+        # Draw undo icon (use dimmed version if disabled)
         undo_rect = self.undo_button.rect
-        screen.blit(self.undo_icon, (undo_rect.x + padding, undo_rect.y + padding))
+        undo_icon = self.undo_icon if self._undo_enabled else self.undo_icon_disabled
+        screen.blit(undo_icon, (undo_rect.x + padding, undo_rect.y + padding))
 
-        # Draw redo icon (centered in button)
+        # Draw redo icon (use dimmed version if disabled)
         redo_rect = self.redo_button.rect
-        screen.blit(self.redo_icon, (redo_rect.x + padding, redo_rect.y + padding))
+        redo_icon = self.redo_icon if self._redo_enabled else self.redo_icon_disabled
+        screen.blit(redo_icon, (redo_rect.x + padding, redo_rect.y + padding))
 
         # Draw flip icon (centered in button)
         flip_rect = self.flip_button.rect

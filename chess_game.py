@@ -138,9 +138,13 @@ def main():
             # Handle control panel actions
             control_action = control_panel.process_event(event)
             if control_action == "undo":
-                print("Undo clicked (not yet implemented)")
+                move_executor.undo_move()
+                selected_square = None
+                valid_moves = []
             elif control_action == "redo":
-                print("Redo clicked (not yet implemented)")
+                move_executor.redo_move()
+                selected_square = None
+                valid_moves = []
             elif control_action == "flip":
                 print("Flip clicked (not yet implemented)")
 
@@ -180,6 +184,7 @@ def main():
 
         # Update UI
         ui_manager.update(time_delta)
+        control_panel.update_button_states(game_state.can_undo(), game_state.can_redo())
 
         # Draw
         board_renderer.draw(screen, board, selected_square, valid_moves)

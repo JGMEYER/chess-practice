@@ -16,6 +16,7 @@ class GameState:
     def __init__(self):
         """Initialize a new game state."""
         self.move_history: list[Move] = []
+        self.redo_history: list[Move] = []
         self.current_turn: Color = Color.WHITE
         self._castling_rights: CastlingRights | None = None
         self.halfmove_clock: int = 0
@@ -85,9 +86,18 @@ class GameState:
         """Get the total number of moves played."""
         return len(self.move_history)
 
+    def can_undo(self) -> bool:
+        """Check if undo is available."""
+        return len(self.move_history) > 0
+
+    def can_redo(self) -> bool:
+        """Check if redo is available."""
+        return len(self.redo_history) > 0
+
     def reset(self) -> None:
         """Reset to initial state."""
         self.move_history.clear()
+        self.redo_history.clear()
         self.current_turn = Color.WHITE
         self._castling_rights = None
         self.halfmove_clock = 0
