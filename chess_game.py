@@ -28,7 +28,7 @@ from graphics.constants import (
 SPRITE_PATH = "assets/sprites/Chess_Pieces_Sprite.svg"
 
 
-def pixel_to_square(x: int, y: int) -> tuple[int, int] | None:
+def pixel_to_square(x: int, y: int, flipped: bool = False) -> tuple[int, int] | None:
     """Convert pixel coordinates to board square (file, rank)."""
     # Check if click is within board bounds
     if x < BOARD_OFFSET_X or x >= BOARD_OFFSET_X + BOARD_PIXEL_SIZE:
@@ -36,9 +36,12 @@ def pixel_to_square(x: int, y: int) -> tuple[int, int] | None:
     if y < BOARD_OFFSET_Y or y >= BOARD_OFFSET_Y + BOARD_PIXEL_SIZE:
         return None
 
-    file = (x - BOARD_OFFSET_X) // SQUARE_SIZE
-    # Flip y to get rank (rank 0 is at bottom)
-    rank = BOARD_SIZE - 1 - (y - BOARD_OFFSET_Y) // SQUARE_SIZE
+    if flipped:
+        file = BOARD_SIZE - 1 - (x - BOARD_OFFSET_X) // SQUARE_SIZE
+        rank = (y - BOARD_OFFSET_Y) // SQUARE_SIZE
+    else:
+        file = (x - BOARD_OFFSET_X) // SQUARE_SIZE
+        rank = BOARD_SIZE - 1 - (y - BOARD_OFFSET_Y) // SQUARE_SIZE
 
     return (file, rank)
 
@@ -146,12 +149,14 @@ def main():
                 selected_square = None
                 valid_moves = []
             elif control_action == "flip":
-                print("Flip clicked (not yet implemented)")
+                board_renderer.toggle_flip()
+                selected_square = None
+                valid_moves = []
 
             # Handle board clicks (only when no dialog is open)
             if fen_dialog is None and credits_dialog is None and event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:  # Left click
-                    clicked_square = pixel_to_square(*event.pos)
+                    clicked_square = pixel_to_square(*event.pos, board_renderer.flipped)
 
                     if clicked_square in valid_moves:
                         move_executor.execute_move(selected_square, clicked_square)
