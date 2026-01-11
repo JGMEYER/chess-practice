@@ -43,77 +43,125 @@ class MoveExecutor:
             The executed Move object with all fields populated
         """
         piece = self.board.get_piece(*from_square)
-        captured_piece = self.board.get_piece(*to_square)
 
-        # Check for castling
-        is_castling = False
-        castling_rook_from = None
-        castling_rook_to = None
-
-        if piece.piece_type == PieceType.KING:
-            file_diff = to_square[0] - from_square[0]
-            # Castling if king moves 2 squares horizontally
-            if abs(file_diff) == 2:
-                is_castling = True
-                rank = from_square[1]
-
-                if file_diff == 2:  # Kingside castling (king moves to g-file)
-                    castling_rook_from = (7, rank)  # h-file
-                    castling_rook_to = (5, rank)    # f-file
-                else:  # Queenside castling (king moves to c-file)
-                    castling_rook_from = (0, rank)  # a-file
-                    castling_rook_to = (3, rank)    # d-file
-
-        # Check for en passant
-        is_en_passant = False
-        en_passant_taking_square = self.game_state.current_en_passant_taking_square
-
-        if (
-            piece.piece_type == PieceType.PAWN
-            and en_passant_taking_square is not None
-            and to_square == en_passant_taking_square
-        ):
-            is_en_passant = True
-            en_passant_target = self.game_state.current_en_passant_target
-            captured_piece = self.board.get_piece(*en_passant_target)
+        # Detect move type and prepare move data
+        if self._is_castling_move(piece, from_square, to_square):
+            move_data = self._prepare_castling_move(piece, from_square, to_square)
+        elif self._is_en_passant_move(piece, to_square):
+            move_data = self._prepare_en_passant_move(piece, from_square, to_square)
+        else:
+            move_data = self._prepare_normal_move(piece, from_square, to_square)
 
         # Execute the move on the board
-        self.board.set_piece(*from_square, None)
-        self.board.set_piece(*to_square, piece)
+        self._apply_move_to_board(move_data)
 
-        # Remove en passant captured pawn if applicable
-        if is_en_passant:
-            self.board.set_piece(*self.game_state.current_en_passant_target, None)
+        # Update game state
+        self._update_castling_rights(piece, from_square, to_square)
 
-        # Execute castling rook move if applicable
-        if is_castling:
-            rook = self.board.get_piece(*castling_rook_from)
-            self.board.set_piece(*castling_rook_from, None)
-            self.board.set_piece(*castling_rook_to, rook)
+        # Create and record move
+        move = Move(**move_data)
+        self.game_state.record_move(move)
+        return move
 
-        # Determine new en passant target
+    def _is_castling_move(
+        self, piece: Piece, from_square: tuple[int, int], to_square: tuple[int, int]
+    ) -> bool:
+        """Check if this is a castling move."""
+        if piece.piece_type != PieceType.KING:
+            return False
+        file_diff = abs(to_square[0] - from_square[0])
+        return file_diff == 2
+
+    def _is_en_passant_move(self, piece: Piece, to_square: tuple[int, int]) -> bool:
+        """Check if this is an en passant move."""
+        if piece.piece_type != PieceType.PAWN:
+            return False
+        en_passant_taking_square = self.game_state.current_en_passant_taking_square
+        return en_passant_taking_square is not None and to_square == en_passant_taking_square
+
+    def _prepare_castling_move(
+        self, piece: Piece, from_square: tuple[int, int], to_square: tuple[int, int]
+    ) -> dict:
+        """Prepare move data for a castling move."""
+        file_diff = to_square[0] - from_square[0]
+        rank = from_square[1]
+
+        if file_diff == 2:  # Kingside castling
+            castling_rook_from = (7, rank)
+            castling_rook_to = (5, rank)
+        else:  # Queenside castling
+            castling_rook_from = (0, rank)
+            castling_rook_to = (3, rank)
+
+        return {
+            "from_square": from_square,
+            "to_square": to_square,
+            "piece": piece,
+            "captured_piece": None,
+            "current_en_passant_target": None,
+            "is_en_passant": False,
+            "is_castling": True,
+            "castling_rook_from": castling_rook_from,
+            "castling_rook_to": castling_rook_to,
+        }
+
+    def _prepare_en_passant_move(
+        self, piece: Piece, from_square: tuple[int, int], to_square: tuple[int, int]
+    ) -> dict:
+        """Prepare move data for an en passant move."""
+        en_passant_target = self.game_state.current_en_passant_target
+        captured_piece = self.board.get_piece(*en_passant_target)
+
+        return {
+            "from_square": from_square,
+            "to_square": to_square,
+            "piece": piece,
+            "captured_piece": captured_piece,
+            "current_en_passant_target": None,
+            "is_en_passant": True,
+            "is_castling": False,
+            "castling_rook_from": None,
+            "castling_rook_to": None,
+        }
+
+    def _prepare_normal_move(
+        self, piece: Piece, from_square: tuple[int, int], to_square: tuple[int, int]
+    ) -> dict:
+        """Prepare move data for a normal move."""
+        captured_piece = self.board.get_piece(*to_square)
         new_en_passant_target = self._calculate_en_passant_target(
             piece, from_square, to_square
         )
 
-        # Update castling rights
-        self._update_castling_rights(piece, from_square, to_square)
+        return {
+            "from_square": from_square,
+            "to_square": to_square,
+            "piece": piece,
+            "captured_piece": captured_piece,
+            "current_en_passant_target": new_en_passant_target,
+            "is_en_passant": False,
+            "is_castling": False,
+            "castling_rook_from": None,
+            "castling_rook_to": None,
+        }
 
-        # Create and record move
-        move = Move(
-            from_square=from_square,
-            to_square=to_square,
-            piece=piece,
-            captured_piece=captured_piece,
-            current_en_passant_target=new_en_passant_target,
-            is_en_passant=is_en_passant,
-            is_castling=is_castling,
-            castling_rook_from=castling_rook_from,
-            castling_rook_to=castling_rook_to,
-        )
+    def _apply_move_to_board(self, move_data: dict) -> None:
+        """Apply the move to the board based on move type."""
+        # Move the main piece
+        self.board.set_piece(*move_data["from_square"], None)
+        self.board.set_piece(*move_data["to_square"], move_data["piece"])
 
-        self.game_state.record_move(move)
-        return move
+        # Handle special move types
+        if move_data["is_castling"]:
+            # Move the rook
+            rook = self.board.get_piece(*move_data["castling_rook_from"])
+            self.board.set_piece(*move_data["castling_rook_from"], None)
+            self.board.set_piece(*move_data["castling_rook_to"], rook)
+
+        elif move_data["is_en_passant"]:
+            # Remove the captured pawn
+            en_passant_target = self.game_state.current_en_passant_target
+            self.board.set_piece(*en_passant_target, None)
 
     def _calculate_en_passant_target(
         self,
@@ -220,28 +268,38 @@ class MoveExecutor:
 
         move = self.game_state.move_history.pop()
 
-        # Restore piece to original position
-        self.board.set_piece(*move.to_square, None)
-        self.board.set_piece(*move.from_square, move.piece)
-
-        # Undo castling rook move if applicable
-        if move.is_castling:
-            rook = self.board.get_piece(*move.castling_rook_to)
-            self.board.set_piece(*move.castling_rook_to, None)
-            self.board.set_piece(*move.castling_rook_from, rook)
-
-        # Restore captured piece
-        if move.captured_piece:
-            if move.is_en_passant:
-                # En passant: restore pawn to calculated square
-                # Same file as to_square, same rank as from_square
-                captured_pawn_square = (move.to_square[0], move.from_square[1])
-                self.board.set_piece(*captured_pawn_square, move.captured_piece)
-            else:
-                # Normal capture: restore to to_square
-                self.board.set_piece(*move.to_square, move.captured_piece)
+        # Restore pieces based on move type
+        self._restore_main_piece(move)
+        self._restore_special_move_pieces(move)
+        self._restore_captured_piece(move)
 
         # Revert turn
         self.game_state.current_turn = move.piece.color
 
         return move
+
+    def _restore_main_piece(self, move: Move) -> None:
+        """Restore the main piece to its original position."""
+        self.board.set_piece(*move.to_square, None)
+        self.board.set_piece(*move.from_square, move.piece)
+
+    def _restore_special_move_pieces(self, move: Move) -> None:
+        """Restore pieces involved in special moves (castling rook)."""
+        if move.is_castling:
+            rook = self.board.get_piece(*move.castling_rook_to)
+            self.board.set_piece(*move.castling_rook_to, None)
+            self.board.set_piece(*move.castling_rook_from, rook)
+
+    def _restore_captured_piece(self, move: Move) -> None:
+        """Restore captured piece to its original position."""
+        if not move.captured_piece:
+            return
+
+        if move.is_en_passant:
+            # En passant: restore pawn to calculated square
+            # Same file as to_square, same rank as from_square
+            captured_pawn_square = (move.to_square[0], move.from_square[1])
+            self.board.set_piece(*captured_pawn_square, move.captured_piece)
+        else:
+            # Normal capture: restore to to_square
+            self.board.set_piece(*move.to_square, move.captured_piece)
