@@ -74,11 +74,29 @@
             "shape": "rectangle"
         },
         "colours": {
-            "normal_bg": "#3C3C3C",
-            "hovered_bg": "#4C4C4C",
-            "active_bg": "#2C2C2C",
-            "normal_border": "#5C5C5C",
-            "hovered_border": "#6C6C6C"
+            "normal_bg": "#3C3A37",
+            "hovered_bg": "#4A4845",
+            "active_bg": "#302E2B",
+            "disabled_bg": "#2A2826",
+            "normal_border": "#4A4845",
+            "hovered_border": "#5A5855",
+            "disabled_border": "#3C3A37"
+        }
+    },
+    "UIWindow": {
+        "colours": {
+            "dark_bg": "#3C3A37",
+            "normal_border": "#4A4845"
+        }
+    },
+    "#fen_dialog": {
+        "misc": {
+            "enable_title_bar": "1",
+            "draggable": "0"
+        },
+        "colours": {
+            "dark_bg": "#3C3A37",
+            "normal_border": "#4A4845"
         }
     }
 }

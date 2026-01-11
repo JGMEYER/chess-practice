@@ -33,6 +33,7 @@ class FENDialog(pygame_gui.elements.UIWindow):
             manager=manager,
             window_display_title="Load FEN Position",
             object_id="#fen_dialog",
+            draggable=False,
         )
 
         # Label
