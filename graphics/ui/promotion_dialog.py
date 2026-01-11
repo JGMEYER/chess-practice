@@ -59,7 +59,6 @@ class PromotionDialog(pygame_gui.elements.UIWindow):
 
         # Create buttons for each promotion piece
         self.piece_buttons: dict[UIButton, PieceType] = {}
-        self._button_rects: list[tuple[pygame.Rect, PieceType]] = []
 
         for i, piece_type in enumerate(PROMOTION_PIECES):
             btn_x = padding + i * (button_size + padding)
@@ -74,16 +73,6 @@ class PromotionDialog(pygame_gui.elements.UIWindow):
             )
             self.piece_buttons[button] = piece_type
 
-            # Store rect for drawing sprites
-            # Account for window position and title bar
-            abs_rect = pygame.Rect(
-                self.rect.x + btn_x + 2,  # +2 for window border
-                self.rect.y + btn_y + 28,  # +28 for title bar
-                button_size,
-                button_size,
-            )
-            self._button_rects.append((abs_rect, piece_type))
-
         self.button_size = button_size
 
     def draw_pieces(self, screen: pygame.Surface) -> None:
@@ -93,16 +82,17 @@ class PromotionDialog(pygame_gui.elements.UIWindow):
         Args:
             screen: The pygame surface to draw on
         """
-        for rect, piece_type in self._button_rects:
+        for button, piece_type in self.piece_buttons.items():
             sprite = self.sprite_loader.get_sprite(self.color, piece_type)
 
             # Scale sprite to fit button (with some padding)
             scaled_size = self.button_size - 10
             scaled_sprite = pygame.transform.smoothscale(sprite, (scaled_size, scaled_size))
 
-            # Center sprite in button
-            sprite_x = rect.x + (self.button_size - scaled_size) // 2
-            sprite_y = rect.y + (self.button_size - scaled_size) // 2
+            # Get the actual button rect and center sprite within it
+            btn_rect = button.rect
+            sprite_x = btn_rect.x + (btn_rect.width - scaled_size) // 2
+            sprite_y = btn_rect.y + (btn_rect.height - scaled_size) // 2
 
             screen.blit(scaled_sprite, (sprite_x, sprite_y))
 

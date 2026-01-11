@@ -98,5 +98,28 @@
             "dark_bg": "#3C3A37",
             "normal_border": "#4A4845"
         }
+    },
+    "#promotion_dialog": {
+        "misc": {
+            "enable_close_button": "0",
+            "draggable": "0"
+        },
+        "colours": {
+            "dark_bg": "#3C3A37",
+            "normal_border": "#4A4845"
+        }
+    },
+    "#promotion_button": {
+        "misc": {
+            "border_width": "1",
+            "shadow_width": "0"
+        },
+        "colours": {
+            "normal_bg": "#3C3A37",
+            "hovered_bg": "#4A4845",
+            "active_bg": "#302E2B",
+            "normal_border": "#4A4845",
+            "hovered_border": "#5A5855"
+        }
     }
 }
