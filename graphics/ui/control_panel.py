@@ -10,6 +10,7 @@ from graphics.constants import (
     SIDEBAR_X,
     SIDEBAR_Y,
     CONTROL_BUTTON_SIZE,
+    CONTROL_ICON_SIZE,
     CONTROL_BUTTON_SPACING,
 )
 
@@ -74,27 +75,29 @@ class ControlPanel:
         self.redo_icon = icon_loader.get_icon("redo")
         self.flip_icon = icon_loader.get_icon("flip")
 
+        # Calculate padding to center icons within buttons
+        self.icon_padding = (CONTROL_BUTTON_SIZE - CONTROL_ICON_SIZE) // 2
+
     def draw(self, screen: pygame.Surface) -> None:
         """
-        Draw icons on top of buttons.
+        Draw icons centered on top of buttons.
 
         Args:
             screen: The pygame surface to draw on
         """
-        # Draw undo icon
+        padding = self.icon_padding
+
+        # Draw undo icon (centered in button)
         undo_rect = self.undo_button.rect
-        icon_pos = (undo_rect.x, undo_rect.y)
-        screen.blit(self.undo_icon, icon_pos)
+        screen.blit(self.undo_icon, (undo_rect.x + padding, undo_rect.y + padding))
 
-        # Draw redo icon
+        # Draw redo icon (centered in button)
         redo_rect = self.redo_button.rect
-        icon_pos = (redo_rect.x, redo_rect.y)
-        screen.blit(self.redo_icon, icon_pos)
+        screen.blit(self.redo_icon, (redo_rect.x + padding, redo_rect.y + padding))
 
-        # Draw flip icon
+        # Draw flip icon (centered in button)
         flip_rect = self.flip_button.rect
-        icon_pos = (flip_rect.x, flip_rect.y)
-        screen.blit(self.flip_icon, icon_pos)
+        screen.blit(self.flip_icon, (flip_rect.x + padding, flip_rect.y + padding))
 
     def process_event(self, event: pygame.event.Event) -> str | None:
         """

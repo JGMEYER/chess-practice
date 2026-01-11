@@ -12,13 +12,15 @@ from graphics.constants import (
     BOARD_OFFSET_X,
     BOARD_OFFSET_Y,
     BOARD_SIZE,
+    MENU_BUTTON_HEIGHT,
     MENU_BAR_HEIGHT,
+    MENU_BAR_BORDER,
     WINDOW_WIDTH,
     WINDOW_HEIGHT,
     SIDEBAR_X,
     SIDEBAR_Y,
     SIDEBAR_WIDTH,
-    CONTROL_BUTTON_SIZE,
+    CONTROL_ICON_SIZE,
     BACKGROUND,
     SIDEBAR_BACKGROUND,
 )
@@ -53,8 +55,8 @@ def main():
         (WINDOW_WIDTH, WINDOW_HEIGHT), "assets/theme.json"
     )
 
-    # Load control icons
-    icon_loader = IconLoader(CONTROL_BUTTON_SIZE)
+    # Load control icons (smaller than buttons to show hover states)
+    icon_loader = IconLoader(CONTROL_ICON_SIZE)
     icon_loader.load_icon("undo", "assets/sprites/undo.svg")
     icon_loader.load_icon("redo", "assets/sprites/redo.svg")
     icon_loader.load_icon("flip", "assets/sprites/flip.svg")
@@ -182,9 +184,17 @@ def main():
         # Draw
         board_renderer.draw(screen, board, selected_square, valid_moves)
 
-        # Draw sidebar background
+        # Draw sidebar background (aligned with board bottom)
         sidebar_rect = pygame.Rect(SIDEBAR_X, SIDEBAR_Y, SIDEBAR_WIDTH, BOARD_PIXEL_SIZE)
         pygame.draw.rect(screen, SIDEBAR_BACKGROUND, sidebar_rect)
+
+        # Draw menu bar bottom border (separates menu from play space)
+        pygame.draw.line(
+            screen,
+            MENU_BAR_BORDER,
+            (0, MENU_BUTTON_HEIGHT),
+            (WINDOW_WIDTH, MENU_BUTTON_HEIGHT),
+        )
 
         ui_manager.draw_ui(screen)
 

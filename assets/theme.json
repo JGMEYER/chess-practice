@@ -17,7 +17,7 @@
             "shadow_width": "0"
         },
         "colours": {
-            "dark_bg": "#25292e"
+            "dark_bg": "#3C3A37"
         }
     },
     "#file_menu_item": {
@@ -26,12 +26,39 @@
             "shadow_width": "0",
             "text_horiz_alignment": "left",
             "text_horiz_alignment_padding": "30"
+        },
+        "colours": {
+            "normal_bg": "#3C3A37",
+            "hovered_bg": "#4A4845",
+            "active_bg": "#302E2B",
+            "normal_text": "#FFFFFF",
+            "hovered_text": "#FFFFFF"
+        }
+    },
+    "#file_menu_button": {
+        "misc": {
+            "border_width": "0",
+            "shadow_width": "0"
+        },
+        "colours": {
+            "normal_bg": "#302E2B",
+            "hovered_bg": "#4A4845",
+            "active_bg": "#25292e",
+            "normal_text": "#FFFFFF",
+            "hovered_text": "#FFFFFF"
         }
     },
     "#help_menu_button": {
         "misc": {
             "border_width": "0",
             "shadow_width": "0"
+        },
+        "colours": {
+            "normal_bg": "#302E2B",
+            "hovered_bg": "#4A4845",
+            "active_bg": "#25292e",
+            "normal_text": "#FFFFFF",
+            "hovered_text": "#FFFFFF"
         }
     },
     "#credits_dialog": {

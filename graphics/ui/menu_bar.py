@@ -4,6 +4,8 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton, UIPanel
 
+from graphics.constants import MENU_BUTTON_HEIGHT
+
 
 class MenuBar:
     """Top menu bar with File and Help menus."""
@@ -18,7 +20,7 @@ class MenuBar:
         """
         self.manager = manager
         self.width = width
-        self.menu_height = 30
+        self.menu_height = MENU_BUTTON_HEIGHT
 
         # Create File menu button
         self.file_button = UIButton(
