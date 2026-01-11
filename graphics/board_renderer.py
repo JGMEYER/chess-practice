@@ -27,16 +27,16 @@ class BoardRenderer:
         """Initialize the board renderer."""
         self._font: pygame.font.Font | None = None
         self._piece_renderer = piece_renderer
-        self._flipped = False
+        self._rotated = False
 
     @property
-    def flipped(self) -> bool:
-        """Whether the board is flipped (black at bottom)."""
-        return self._flipped
+    def rotated(self) -> bool:
+        """Whether the board is rotated 180 degrees (black at bottom)."""
+        return self._rotated
 
-    def toggle_flip(self) -> None:
-        """Toggle the board orientation."""
-        self._flipped = not self._flipped
+    def toggle_rotation(self) -> None:
+        """Toggle the board orientation (rotate 180 degrees)."""
+        self._rotated = not self._rotated
 
     def _ensure_font(self) -> None:
         """Initialize the font if not already done."""
@@ -55,7 +55,7 @@ class BoardRenderer:
         Returns:
             Pixel (x, y) of the top-left corner of the square
         """
-        if self._flipped:
+        if self._rotated:
             x = BOARD_OFFSET_X + (BOARD_SIZE - 1 - file) * SQUARE_SIZE
             y = BOARD_OFFSET_Y + rank * SQUARE_SIZE
         else:
@@ -100,7 +100,7 @@ class BoardRenderer:
         # File labels (a-h) along the bottom
         for file in range(BOARD_SIZE):
             # When flipped, files go h-a from left to right
-            display_file = (BOARD_SIZE - 1 - file) if self._flipped else file
+            display_file = (BOARD_SIZE - 1 - file) if self._rotated else file
             letter = chr(ord("a") + display_file)
             text = self._font.render(letter, True, LABEL_COLOR)
             x = BOARD_OFFSET_X + file * SQUARE_SIZE + (SQUARE_SIZE - text.get_width()) // 2
@@ -111,7 +111,7 @@ class BoardRenderer:
         for visual_row in range(BOARD_SIZE):
             # When flipped, ranks go 1-8 from top to bottom
             # When not flipped, ranks go 8-1 from top to bottom
-            if self._flipped:
+            if self._rotated:
                 rank = visual_row + 1
             else:
                 rank = BOARD_SIZE - visual_row
@@ -165,6 +165,6 @@ class BoardRenderer:
         surface.fill(BACKGROUND)
         self.draw_board(surface, selected_square)
         self.draw_labels(surface)
-        self._piece_renderer.draw_pieces(surface, board, self._flipped)
+        self._piece_renderer.draw_pieces(surface, board, self._rotated)
         if valid_moves:
             self.draw_valid_moves(surface, valid_moves)

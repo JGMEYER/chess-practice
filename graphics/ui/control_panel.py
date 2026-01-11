@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 
 class ControlPanel:
-    """Right sidebar control panel with undo/redo/flip buttons."""
+    """Right sidebar control panel with undo/redo/rotate buttons."""
 
     def __init__(self, manager: pygame_gui.UIManager, icon_loader: IconLoader):
         """
@@ -58,11 +58,11 @@ class ControlPanel:
             object_id="#control_button",
         )
 
-        # Create flip button
-        flip_x = start_x + 2 * (CONTROL_BUTTON_SIZE + CONTROL_BUTTON_SPACING)
-        self.flip_button = UIButton(
+        # Create rotate button (rotates board 180 degrees)
+        rotate_x = start_x + 2 * (CONTROL_BUTTON_SIZE + CONTROL_BUTTON_SPACING)
+        self.rotate_button = UIButton(
             relative_rect=pygame.Rect(
-                (flip_x, button_y),
+                (rotate_x, button_y),
                 (CONTROL_BUTTON_SIZE, CONTROL_BUTTON_SIZE)
             ),
             text="",
@@ -73,7 +73,7 @@ class ControlPanel:
         # Store icons and buttons for custom rendering
         self.undo_icon = icon_loader.get_icon("undo")
         self.redo_icon = icon_loader.get_icon("redo")
-        self.flip_icon = icon_loader.get_icon("flip")
+        self.rotate_icon = self._create_rotate_icon(icon_loader.get_icon("rotate"))
 
         # Calculate padding to center icons within buttons
         self.icon_padding = (CONTROL_BUTTON_SIZE - CONTROL_ICON_SIZE) // 2
@@ -93,6 +93,21 @@ class ControlPanel:
         disabled = icon.copy()
         disabled.set_alpha(80)
         return disabled
+
+    def _create_rotate_icon(self, base_icon: pygame.Surface) -> pygame.Surface:
+        """Create rotate icon with '180' text overlay."""
+        icon = base_icon.copy()
+
+        # Create small font for "180" text
+        font = pygame.font.SysFont("Arial", 10, bold=True)
+        text = font.render("180", True, (255, 255, 255))
+
+        # Position text in bottom-right area of icon
+        text_x = icon.get_width() - text.get_width() - 1
+        text_y = icon.get_height() - text.get_height() - 1
+        icon.blit(text, (text_x, text_y))
+
+        return icon
 
     def update_button_states(self, can_undo: bool, can_redo: bool) -> None:
         """
@@ -135,9 +150,9 @@ class ControlPanel:
         redo_icon = self.redo_icon if self._redo_enabled else self.redo_icon_disabled
         screen.blit(redo_icon, (redo_rect.x + padding, redo_rect.y + padding))
 
-        # Draw flip icon (centered in button)
-        flip_rect = self.flip_button.rect
-        screen.blit(self.flip_icon, (flip_rect.x + padding, flip_rect.y + padding))
+        # Draw rotate icon (centered in button)
+        rotate_rect = self.rotate_button.rect
+        screen.blit(self.rotate_icon, (rotate_rect.x + padding, rotate_rect.y + padding))
 
     def process_event(self, event: pygame.event.Event) -> str | None:
         """
@@ -147,13 +162,13 @@ class ControlPanel:
             event: A pygame event
 
         Returns:
-            Action string: "undo", "redo", "flip", or None
+            Action string: "undo", "redo", "rotate", or None
         """
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             if event.ui_element == self.undo_button:
                 return "undo"
             elif event.ui_element == self.redo_button:
                 return "redo"
-            elif event.ui_element == self.flip_button:
-                return "flip"
+            elif event.ui_element == self.rotate_button:
+                return "rotate"
         return None

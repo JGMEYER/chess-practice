@@ -9,7 +9,7 @@ from pygame_gui.elements import UIButton, UITextBox
 CREDITS_HTML = """<b>Icon Attributions:</b>
 - "redo" by Gregor Cresnar (<a href="https://thenounproject.com/icon/redo-3557655/">link</a>)
 - "undo" by Gregor Cresnar (<a href="https://thenounproject.com/icon/undo-3557660/">link</a>)
-- "vertical flip" by Gregor Cresnar (<a href="https://thenounproject.com/icon/vertical-flip-3552560/">link</a>)
+- "rotate" by Gregor Cresnar (<a href="https://thenounproject.com/icon/rotate-1510288/">link</a>)
 """
 
 

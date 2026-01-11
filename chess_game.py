@@ -28,7 +28,7 @@ from graphics.constants import (
 SPRITE_PATH = "assets/sprites/Chess_Pieces_Sprite.svg"
 
 
-def pixel_to_square(x: int, y: int, flipped: bool = False) -> tuple[int, int] | None:
+def pixel_to_square(x: int, y: int, rotated: bool = False) -> tuple[int, int] | None:
     """Convert pixel coordinates to board square (file, rank)."""
     # Check if click is within board bounds
     if x < BOARD_OFFSET_X or x >= BOARD_OFFSET_X + BOARD_PIXEL_SIZE:
@@ -36,7 +36,7 @@ def pixel_to_square(x: int, y: int, flipped: bool = False) -> tuple[int, int] | 
     if y < BOARD_OFFSET_Y or y >= BOARD_OFFSET_Y + BOARD_PIXEL_SIZE:
         return None
 
-    if flipped:
+    if rotated:
         file = BOARD_SIZE - 1 - (x - BOARD_OFFSET_X) // SQUARE_SIZE
         rank = (y - BOARD_OFFSET_Y) // SQUARE_SIZE
     else:
@@ -62,7 +62,7 @@ def main():
     icon_loader = IconLoader(CONTROL_ICON_SIZE)
     icon_loader.load_icon("undo", "assets/sprites/undo.svg")
     icon_loader.load_icon("redo", "assets/sprites/redo.svg")
-    icon_loader.load_icon("flip", "assets/sprites/flip.svg")
+    icon_loader.load_icon("rotate", "assets/sprites/rotate.svg")
 
     # Initialize UI components
     menu_bar = MenuBar(ui_manager, WINDOW_WIDTH)
@@ -148,15 +148,15 @@ def main():
                 move_executor.redo_move()
                 selected_square = None
                 valid_moves = []
-            elif control_action == "flip":
-                board_renderer.toggle_flip()
+            elif control_action == "rotate":
+                board_renderer.toggle_rotation()
                 selected_square = None
                 valid_moves = []
 
             # Handle board clicks (only when no dialog is open)
             if fen_dialog is None and credits_dialog is None and event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:  # Left click
-                    clicked_square = pixel_to_square(*event.pos, board_renderer.flipped)
+                    clicked_square = pixel_to_square(*event.pos, board_renderer.rotated)
 
                     if clicked_square in valid_moves:
                         move_executor.execute_move(selected_square, clicked_square)
