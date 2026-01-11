@@ -28,6 +28,12 @@
             "text_horiz_alignment_padding": "30"
         }
     },
+    "#help_menu_button": {
+        "misc": {
+            "border_width": "0",
+            "shadow_width": "0"
+        }
+    },
     "#credits_dialog": {
         "misc": {
             "enable_close_button": "0"

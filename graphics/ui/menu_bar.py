@@ -6,7 +6,7 @@ from pygame_gui.elements import UIButton, UIPanel
 
 
 class MenuBar:
-    """Top menu bar with File menu."""
+    """Top menu bar with File and Help menus."""
 
     def __init__(self, manager: pygame_gui.UIManager, width: int):
         """
@@ -28,51 +28,72 @@ class MenuBar:
             object_id="#file_menu_button",
         )
 
+        # Create Help menu button
+        self.help_button = UIButton(
+            relative_rect=pygame.Rect((60, 0), (60, self.menu_height)),
+            text="Help",
+            manager=manager,
+            object_id="#help_menu_button",
+        )
+
         # Dropdown state
-        self.dropdown_visible = False
+        self.active_menu: str | None = None
         self.dropdown_panel: UIPanel | None = None
         self.load_fen_button: UIButton | None = None
         self.credits_button: UIButton | None = None
 
-    def show_dropdown(self) -> None:
+    def show_file_dropdown(self) -> None:
         """Show the File dropdown menu."""
-        if not self.dropdown_visible:
-            # Position dropdown directly below the File button
-            button_bottom = self.file_button.relative_rect.bottom
+        self.hide_dropdown()
+        button_bottom = self.file_button.relative_rect.bottom
 
-            # Create panel container for dropdown
-            self.dropdown_panel = UIPanel(
-                relative_rect=pygame.Rect((0, button_bottom), (150, 56)),
-                manager=self.manager,
-                object_id="#dropdown_panel",
-            )
+        # Create panel container for dropdown
+        self.dropdown_panel = UIPanel(
+            relative_rect=pygame.Rect((0, button_bottom), (150, 28)),
+            manager=self.manager,
+            object_id="#dropdown_panel",
+        )
 
-            # Create buttons inside the panel with no spacing
-            self.load_fen_button = UIButton(
-                relative_rect=pygame.Rect((0, 0), (150, 28)),
-                text="Load from FEN...",
-                manager=self.manager,
-                container=self.dropdown_panel,
-                object_id="#file_menu_item",
-            )
-            self.credits_button = UIButton(
-                relative_rect=pygame.Rect((0, 28), (150, 28)),
-                text="Credits",
-                manager=self.manager,
-                container=self.dropdown_panel,
-                object_id="#file_menu_item",
-            )
-            self.dropdown_visible = True
+        # Create Load from FEN button
+        self.load_fen_button = UIButton(
+            relative_rect=pygame.Rect((0, 0), (150, 28)),
+            text="Load from FEN...",
+            manager=self.manager,
+            container=self.dropdown_panel,
+            object_id="#file_menu_item",
+        )
+        self.active_menu = "file"
+
+    def show_help_dropdown(self) -> None:
+        """Show the Help dropdown menu."""
+        self.hide_dropdown()
+        button_bottom = self.help_button.relative_rect.bottom
+
+        # Create panel container for dropdown
+        self.dropdown_panel = UIPanel(
+            relative_rect=pygame.Rect((60, button_bottom), (150, 28)),
+            manager=self.manager,
+            object_id="#dropdown_panel",
+        )
+
+        # Create Credits button
+        self.credits_button = UIButton(
+            relative_rect=pygame.Rect((0, 0), (150, 28)),
+            text="Credits",
+            manager=self.manager,
+            container=self.dropdown_panel,
+            object_id="#file_menu_item",
+        )
+        self.active_menu = "help"
 
     def hide_dropdown(self) -> None:
-        """Hide the File dropdown menu."""
-        if self.dropdown_visible:
-            if self.dropdown_panel:
-                self.dropdown_panel.kill()
-                self.dropdown_panel = None
-            self.load_fen_button = None
-            self.credits_button = None
-            self.dropdown_visible = False
+        """Hide any open dropdown menu."""
+        if self.dropdown_panel:
+            self.dropdown_panel.kill()
+            self.dropdown_panel = None
+        self.load_fen_button = None
+        self.credits_button = None
+        self.active_menu = None
 
     def process_event(self, event: pygame.event.Event) -> str | None:
         """
@@ -87,10 +108,15 @@ class MenuBar:
         """
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             if event.ui_element == self.file_button:
-                if self.dropdown_visible:
+                if self.active_menu == "file":
                     self.hide_dropdown()
                 else:
-                    self.show_dropdown()
+                    self.show_file_dropdown()
+            elif event.ui_element == self.help_button:
+                if self.active_menu == "help":
+                    self.hide_dropdown()
+                else:
+                    self.show_help_dropdown()
             elif event.ui_element == self.load_fen_button:
                 self.hide_dropdown()
                 return "load_fen"
@@ -100,16 +126,21 @@ class MenuBar:
 
         # Hide dropdown when clicking elsewhere
         if event.type == pygame.MOUSEBUTTONDOWN:
-            if self.dropdown_visible:
+            if self.active_menu is not None:
                 # Check if click is outside menu elements
                 mouse_pos = event.pos
                 file_rect = self.file_button.relative_rect
+                help_rect = self.help_button.relative_rect
                 dropdown_rect = (
                     self.dropdown_panel.relative_rect
                     if self.dropdown_panel
                     else pygame.Rect(0, 0, 0, 0)
                 )
-                if not file_rect.collidepoint(mouse_pos) and not dropdown_rect.collidepoint(mouse_pos):
+                if (
+                    not file_rect.collidepoint(mouse_pos)
+                    and not help_rect.collidepoint(mouse_pos)
+                    and not dropdown_rect.collidepoint(mouse_pos)
+                ):
                     self.hide_dropdown()
 
         return None
