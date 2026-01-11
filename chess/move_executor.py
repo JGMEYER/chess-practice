@@ -3,9 +3,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from .board import Board
-from .constants import PieceType
+from .constants import PieceType, Color
 from .game_state import GameState
 from .move import Move
+from .pieces import Queen, Rook, Bishop, Knight
 
 if TYPE_CHECKING:
     from .piece import Piece
@@ -29,15 +30,17 @@ class MoveExecutor:
         self,
         from_square: tuple[int, int],
         to_square: tuple[int, int],
+        promotion_piece_type: PieceType | None = None,
     ) -> Move:
         """
         Execute a move and return the Move object.
 
-        Handles normal moves, captures, en passant, and castling.
+        Handles normal moves, captures, en passant, castling, and promotion.
 
         Args:
             from_square: The starting square (file, rank)
             to_square: The destination square (file, rank)
+            promotion_piece_type: The piece type to promote to (for pawn promotion)
 
         Returns:
             The executed Move object with all fields populated
@@ -52,6 +55,14 @@ class MoveExecutor:
         else:
             move_data = self._prepare_normal_move(piece, from_square, to_square)
 
+        # Handle promotion
+        if promotion_piece_type is not None:
+            promoted_piece = self._create_promoted_piece(
+                promotion_piece_type, piece.color, to_square
+            )
+            move_data["is_promotion"] = True
+            move_data["promoted_to"] = promoted_piece
+
         # Execute the move on the board
         self._apply_move_to_board(move_data)
 
@@ -65,6 +76,19 @@ class MoveExecutor:
         move = Move(**move_data)
         self.game_state.record_move(move)
         return move
+
+    def _create_promoted_piece(
+        self, piece_type: PieceType, color: Color, position: tuple[int, int]
+    ) -> Piece:
+        """Create a new piece for promotion."""
+        piece_classes = {
+            PieceType.QUEEN: Queen,
+            PieceType.ROOK: Rook,
+            PieceType.BISHOP: Bishop,
+            PieceType.KNIGHT: Knight,
+        }
+        piece_class = piece_classes[piece_type]
+        return piece_class(color, position)
 
     def _is_castling_move(
         self, piece: Piece, from_square: tuple[int, int], to_square: tuple[int, int]
@@ -81,6 +105,27 @@ class MoveExecutor:
             return False
         en_passant_taking_square = self.game_state.current_en_passant_taking_square
         return en_passant_taking_square is not None and to_square == en_passant_taking_square
+
+    def is_promotion_move(
+        self, from_square: tuple[int, int], to_square: tuple[int, int]
+    ) -> bool:
+        """
+        Check if a move would result in pawn promotion.
+
+        Args:
+            from_square: The starting square (file, rank)
+            to_square: The destination square (file, rank)
+
+        Returns:
+            True if this move is a pawn reaching the back rank
+        """
+        piece = self.board.get_piece(*from_square)
+        if piece is None or piece.piece_type != PieceType.PAWN:
+            return False
+
+        # White promotes on rank 7, black promotes on rank 0
+        promotion_rank = 7 if piece.color == Color.WHITE else 0
+        return to_square[1] == promotion_rank
 
     def _prepare_castling_move(
         self, piece: Piece, from_square: tuple[int, int], to_square: tuple[int, int]
@@ -150,18 +195,23 @@ class MoveExecutor:
 
     def _apply_move_to_board(self, move_data: dict) -> None:
         """Apply the move to the board based on move type."""
-        # Move the main piece
+        # Move the main piece (or promoted piece if promotion)
         self.board.set_piece(*move_data["from_square"], None)
-        self.board.set_piece(*move_data["to_square"], move_data["piece"])
+
+        # Place either the promoted piece or the original piece
+        if move_data.get("is_promotion") and move_data.get("promoted_to"):
+            self.board.set_piece(*move_data["to_square"], move_data["promoted_to"])
+        else:
+            self.board.set_piece(*move_data["to_square"], move_data["piece"])
 
         # Handle special move types
-        if move_data["is_castling"]:
+        if move_data.get("is_castling"):
             # Move the rook
             rook = self.board.get_piece(*move_data["castling_rook_from"])
             self.board.set_piece(*move_data["castling_rook_from"], None)
             self.board.set_piece(*move_data["castling_rook_to"], rook)
 
-        elif move_data["is_en_passant"]:
+        elif move_data.get("is_en_passant"):
             # Remove the captured pawn
             en_passant_target = self.game_state.current_en_passant_target
             self.board.set_piece(*en_passant_target, None)
@@ -284,7 +334,9 @@ class MoveExecutor:
 
     def _restore_main_piece(self, move: Move) -> None:
         """Restore the main piece to its original position."""
+        # Remove the piece at destination (could be promoted piece)
         self.board.set_piece(*move.to_square, None)
+        # Restore the original piece (pawn in case of promotion)
         self.board.set_piece(*move.from_square, move.piece)
 
     def _restore_special_move_pieces(self, move: Move) -> None:
@@ -315,8 +367,6 @@ class MoveExecutor:
         Returns:
             The redone Move, or None if no moves to redo
         """
-        from .constants import Color
-
         if not self.game_state.redo_history:
             return None
 
@@ -331,6 +381,8 @@ class MoveExecutor:
             "castling_rook_from": move.castling_rook_from,
             "castling_rook_to": move.castling_rook_to,
             "is_en_passant": move.is_en_passant,
+            "is_promotion": move.is_promotion,
+            "promoted_to": move.promoted_to,
         }
         self._apply_move_to_board(move_data)
 

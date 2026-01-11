@@ -4,7 +4,14 @@ import pygame_gui
 from chess import Board, MoveGenerator, MoveExecutor, FENLoader
 from chess.game_state import GameState
 from graphics import BoardRenderer, PieceRenderer, SpriteLoader, IconLoader
-from graphics.ui import MenuBar, FENDialog, show_error_dialog, CreditsDialog, ControlPanel
+from graphics.ui import (
+    MenuBar,
+    FENDialog,
+    show_error_dialog,
+    CreditsDialog,
+    ControlPanel,
+    PromotionDialog,
+)
 from graphics.constants import (
     LABEL_MARGIN,
     BOARD_PIXEL_SIZE,
@@ -69,6 +76,10 @@ def main():
     control_panel = ControlPanel(ui_manager, icon_loader)
     fen_dialog: FENDialog | None = None
     credits_dialog: CreditsDialog | None = None
+    promotion_dialog: PromotionDialog | None = None
+
+    # Pending promotion state (stores move waiting for promotion choice)
+    pending_promotion: tuple[tuple[int, int], tuple[int, int]] | None = None
 
     # Initialize game components
     board = Board()
@@ -137,31 +148,67 @@ def main():
                     fen_dialog = None
                 if credits_dialog is not None and event.ui_element == credits_dialog:
                     credits_dialog = None
+                if promotion_dialog is not None and event.ui_element == promotion_dialog:
+                    # Cancel the pending promotion
+                    promotion_dialog = None
+                    pending_promotion = None
 
-            # Handle control panel actions
-            control_action = control_panel.process_event(event)
-            if control_action == "undo":
-                move_executor.undo_move()
-                selected_square = None
-                valid_moves = []
-            elif control_action == "redo":
-                move_executor.redo_move()
-                selected_square = None
-                valid_moves = []
-            elif control_action == "rotate":
-                board_renderer.toggle_rotation()
-                selected_square = None
-                valid_moves = []
+            # Handle promotion dialog events
+            if promotion_dialog is not None:
+                selected_piece_type = promotion_dialog.process_event(event)
+                if selected_piece_type is not None and pending_promotion is not None:
+                    # Execute the promotion move
+                    from_sq, to_sq = pending_promotion
+                    move_executor.execute_move(from_sq, to_sq, selected_piece_type)
+                    promotion_dialog.kill()
+                    promotion_dialog = None
+                    pending_promotion = None
+                    selected_square = None
+                    valid_moves = []
+
+            # Handle control panel actions (only when no promotion dialog)
+            if promotion_dialog is None:
+                control_action = control_panel.process_event(event)
+                if control_action == "undo":
+                    move_executor.undo_move()
+                    selected_square = None
+                    valid_moves = []
+                elif control_action == "redo":
+                    move_executor.redo_move()
+                    selected_square = None
+                    valid_moves = []
+                elif control_action == "rotate":
+                    board_renderer.toggle_rotation()
+                    selected_square = None
+                    valid_moves = []
 
             # Handle board clicks (only when no dialog is open)
-            if fen_dialog is None and credits_dialog is None and event.type == pygame.MOUSEBUTTONDOWN:
+            all_dialogs_closed = (
+                fen_dialog is None
+                and credits_dialog is None
+                and promotion_dialog is None
+            )
+            if all_dialogs_closed and event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:  # Left click
                     clicked_square = pixel_to_square(*event.pos, board_renderer.rotated)
 
                     if clicked_square in valid_moves:
-                        move_executor.execute_move(selected_square, clicked_square)
-                        selected_square = None
-                        valid_moves = []
+                        # Check if this is a promotion move
+                        if move_executor.is_promotion_move(selected_square, clicked_square):
+                            # Show promotion dialog
+                            promoting_piece = board.get_piece(*selected_square)
+                            promotion_dialog = PromotionDialog(
+                                ui_manager,
+                                (WINDOW_WIDTH, WINDOW_HEIGHT),
+                                promoting_piece.color,
+                                sprite_loader,
+                            )
+                            pending_promotion = (selected_square, clicked_square)
+                        else:
+                            # Execute normal move
+                            move_executor.execute_move(selected_square, clicked_square)
+                            selected_square = None
+                            valid_moves = []
                     elif clicked_square is None:
                         # Clicked outside board - deselect
                         selected_square = None
@@ -210,6 +257,10 @@ def main():
 
         # Draw control panel icons on top of buttons
         control_panel.draw(screen)
+
+        # Draw promotion dialog pieces on top of UI
+        if promotion_dialog is not None:
+            promotion_dialog.draw_pieces(screen)
 
         pygame.display.flip()
 

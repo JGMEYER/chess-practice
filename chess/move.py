@@ -20,6 +20,8 @@ class Move:
     is_castling: bool = False
     castling_rook_from: tuple[int, int] | None = None
     castling_rook_to: tuple[int, int] | None = None
+    is_promotion: bool = False
+    promoted_to: Piece | None = None
 
     def __repr__(self) -> str:
         capture_str = f" captures {self.captured_piece}" if self.captured_piece else ""
@@ -29,6 +31,8 @@ class Move:
             special_str = f" ({castling_type})"
         elif self.is_en_passant:
             special_str = " (en passant)"
+        elif self.is_promotion and self.promoted_to:
+            special_str = f" (promotes to {self.promoted_to.piece_type.name})"
         elif self.current_en_passant_target:
             special_str = f", new en passant target is {self.current_en_passant_target}"
         else:
