@@ -9,5 +9,28 @@
         "misc": {
             "list_item_height": "25"
         }
+    },
+    "#dropdown_panel": {
+        "misc": {
+            "shape": "rectangle",
+            "border_width": "0",
+            "shadow_width": "0"
+        },
+        "colours": {
+            "dark_bg": "#25292e"
+        }
+    },
+    "#file_menu_item": {
+        "misc": {
+            "border_width": "0",
+            "shadow_width": "0",
+            "text_horiz_alignment": "left",
+            "text_horiz_alignment_padding": "30"
+        }
+    },
+    "#credits_dialog": {
+        "misc": {
+            "enable_close_button": "0"
+        }
     }
 }

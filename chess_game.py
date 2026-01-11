@@ -4,7 +4,7 @@ import pygame_gui
 from chess import Board, MoveGenerator, MoveExecutor, FENLoader
 from chess.game_state import GameState
 from graphics import BoardRenderer, PieceRenderer, SpriteLoader
-from graphics.ui import MenuBar, FENDialog, show_error_dialog
+from graphics.ui import MenuBar, FENDialog, show_error_dialog, CreditsDialog
 from graphics.constants import (
     LABEL_MARGIN,
     BOARD_PIXEL_SIZE,
@@ -52,6 +52,7 @@ def main():
     # Initialize UI components
     menu_bar = MenuBar(ui_manager, WINDOW_WIDTH)
     fen_dialog: FENDialog | None = None
+    credits_dialog: CreditsDialog | None = None
 
     # Initialize game components
     board = Board()
@@ -87,6 +88,8 @@ def main():
             action = menu_bar.process_event(event)
             if action == "load_fen":
                 fen_dialog = FENDialog(ui_manager, (WINDOW_WIDTH, WINDOW_HEIGHT))
+            elif action == "show_credits":
+                credits_dialog = CreditsDialog(ui_manager, (WINDOW_WIDTH, WINDOW_HEIGHT))
 
             # Handle FEN dialog events
             if fen_dialog is not None and event.type == pygame_gui.UI_BUTTON_PRESSED:
@@ -106,13 +109,21 @@ def main():
                     fen_dialog.kill()
                     fen_dialog = None
 
+            # Handle credits dialog events
+            if credits_dialog is not None and event.type == pygame_gui.UI_BUTTON_PRESSED:
+                if event.ui_element == credits_dialog.close_button:
+                    credits_dialog.kill()
+                    credits_dialog = None
+
             # Handle window close events (for dialogs)
             if event.type == pygame_gui.UI_WINDOW_CLOSE:
                 if fen_dialog is not None and event.ui_element == fen_dialog:
                     fen_dialog = None
+                if credits_dialog is not None and event.ui_element == credits_dialog:
+                    credits_dialog = None
 
             # Handle board clicks (only when no dialog is open)
-            if fen_dialog is None and event.type == pygame.MOUSEBUTTONDOWN:
+            if fen_dialog is None and credits_dialog is None and event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:  # Left click
                     clicked_square = pixel_to_square(*event.pos)
 
