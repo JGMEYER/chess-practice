@@ -1,3 +1,3 @@
-"redo" by Gregor Cresnar https://thenounproject.com/icon/redo-3557655/
-"undo" by Gregor Cresnar https://thenounproject.com/icon/undo-3557660/
-"vertical flip" by Gregor Cresnar https://thenounproject.com/icon/vertical-flip-3552560/
+- "redo" by Gregor Cresnar https://thenounproject.com/icon/redo-3557655/
+- "undo" by Gregor Cresnar https://thenounproject.com/icon/undo-3557660/
+- "vertical flip" by Gregor Cresnar https://thenounproject.com/icon/vertical-flip-3552560/

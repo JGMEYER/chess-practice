@@ -3,8 +3,8 @@ import pygame_gui
 
 from chess import Board, MoveGenerator, MoveExecutor, FENLoader
 from chess.game_state import GameState
-from graphics import BoardRenderer, PieceRenderer, SpriteLoader
-from graphics.ui import MenuBar, FENDialog, show_error_dialog, CreditsDialog
+from graphics import BoardRenderer, PieceRenderer, SpriteLoader, IconLoader
+from graphics.ui import MenuBar, FENDialog, show_error_dialog, CreditsDialog, ControlPanel
 from graphics.constants import (
     LABEL_MARGIN,
     BOARD_PIXEL_SIZE,
@@ -13,11 +13,15 @@ from graphics.constants import (
     BOARD_OFFSET_Y,
     BOARD_SIZE,
     MENU_BAR_HEIGHT,
+    WINDOW_WIDTH,
+    WINDOW_HEIGHT,
+    SIDEBAR_X,
+    SIDEBAR_Y,
+    SIDEBAR_WIDTH,
+    CONTROL_BUTTON_SIZE,
+    BACKGROUND,
+    SIDEBAR_BACKGROUND,
 )
-
-# Window dimensions: board + margins for labels + menu bar
-WINDOW_WIDTH = BOARD_PIXEL_SIZE + LABEL_MARGIN
-WINDOW_HEIGHT = BOARD_PIXEL_SIZE + LABEL_MARGIN + MENU_BAR_HEIGHT
 
 SPRITE_PATH = "assets/sprites/Chess_Pieces_Sprite.svg"
 
@@ -49,8 +53,15 @@ def main():
         (WINDOW_WIDTH, WINDOW_HEIGHT), "assets/theme.json"
     )
 
+    # Load control icons
+    icon_loader = IconLoader(CONTROL_BUTTON_SIZE)
+    icon_loader.load_icon("undo", "assets/sprites/undo.svg")
+    icon_loader.load_icon("redo", "assets/sprites/redo.svg")
+    icon_loader.load_icon("flip", "assets/sprites/flip.svg")
+
     # Initialize UI components
     menu_bar = MenuBar(ui_manager, WINDOW_WIDTH)
+    control_panel = ControlPanel(ui_manager, icon_loader)
     fen_dialog: FENDialog | None = None
     credits_dialog: CreditsDialog | None = None
 
@@ -122,6 +133,15 @@ def main():
                 if credits_dialog is not None and event.ui_element == credits_dialog:
                     credits_dialog = None
 
+            # Handle control panel actions
+            control_action = control_panel.process_event(event)
+            if control_action == "undo":
+                print("Undo clicked (not yet implemented)")
+            elif control_action == "redo":
+                print("Redo clicked (not yet implemented)")
+            elif control_action == "flip":
+                print("Flip clicked (not yet implemented)")
+
             # Handle board clicks (only when no dialog is open)
             if fen_dialog is None and credits_dialog is None and event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:  # Left click
@@ -161,7 +181,16 @@ def main():
 
         # Draw
         board_renderer.draw(screen, board, selected_square, valid_moves)
+
+        # Draw sidebar background
+        sidebar_rect = pygame.Rect(SIDEBAR_X, SIDEBAR_Y, SIDEBAR_WIDTH, BOARD_PIXEL_SIZE)
+        pygame.draw.rect(screen, SIDEBAR_BACKGROUND, sidebar_rect)
+
         ui_manager.draw_ui(screen)
+
+        # Draw control panel icons on top of buttons
+        control_panel.draw(screen)
+
         pygame.display.flip()
 
     pygame.quit()
