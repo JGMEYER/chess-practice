@@ -42,6 +42,7 @@ class MenuBar:
         self.active_menu: str | None = None
         self.dropdown_panel: UIPanel | None = None
         self.load_fen_button: UIButton | None = None
+        self.load_pgn_button: UIButton | None = None
         self.credits_button: UIButton | None = None
 
     def show_file_dropdown(self) -> None:
@@ -49,9 +50,9 @@ class MenuBar:
         self.hide_dropdown()
         button_bottom = self.file_button.relative_rect.bottom
 
-        # Create panel container for dropdown
+        # Create panel container for dropdown (height for 2 items)
         self.dropdown_panel = UIPanel(
-            relative_rect=pygame.Rect((0, button_bottom), (150, 28)),
+            relative_rect=pygame.Rect((0, button_bottom), (150, 56)),
             manager=self.manager,
             object_id="#dropdown_panel",
         )
@@ -60,6 +61,15 @@ class MenuBar:
         self.load_fen_button = UIButton(
             relative_rect=pygame.Rect((0, 0), (150, 28)),
             text="Load from FEN...",
+            manager=self.manager,
+            container=self.dropdown_panel,
+            object_id="#file_menu_item",
+        )
+
+        # Create Load from PGN button
+        self.load_pgn_button = UIButton(
+            relative_rect=pygame.Rect((0, 28), (150, 28)),
+            text="Load from PGN...",
             manager=self.manager,
             container=self.dropdown_panel,
             object_id="#file_menu_item",
@@ -94,6 +104,7 @@ class MenuBar:
             self.dropdown_panel.kill()
             self.dropdown_panel = None
         self.load_fen_button = None
+        self.load_pgn_button = None
         self.credits_button = None
         self.active_menu = None
 
@@ -106,7 +117,7 @@ class MenuBar:
 
         Returns:
             Action string if an action was triggered, None otherwise.
-            Possible actions: "load_fen", "show_credits"
+            Possible actions: "load_fen", "load_pgn", "show_credits"
         """
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             if event.ui_element == self.file_button:
@@ -122,6 +133,9 @@ class MenuBar:
             elif event.ui_element == self.load_fen_button:
                 self.hide_dropdown()
                 return "load_fen"
+            elif event.ui_element == self.load_pgn_button:
+                self.hide_dropdown()
+                return "load_pgn"
             elif event.ui_element == self.credits_button:
                 self.hide_dropdown()
                 return "show_credits"

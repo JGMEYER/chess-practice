@@ -2,13 +2,14 @@ import pygame
 import pygame_gui
 
 from game_controller import GameController
-from chess import AIPlayerError
+from chess import AIPlayerError, PGNError
 from graphics import (
     BoardRenderer,
     PieceRenderer,
     SpriteLoader,
     IconLoader,
     CapturedPiecesRenderer,
+    MoveListRenderer,
 )
 from graphics.ui import (
     MenuBar,
@@ -17,6 +18,7 @@ from graphics.ui import (
     CreditsDialog,
     ControlPanel,
     PromotionDialog,
+    PGNDialog,
 )
 from graphics.constants import (
     BOARD_PIXEL_SIZE,
@@ -78,6 +80,7 @@ def main():
     piece_renderer = PieceRenderer(sprite_loader)
     board_renderer = BoardRenderer(piece_renderer)
     captured_renderer = CapturedPiecesRenderer(sprite_loader)
+    move_list_renderer = MoveListRenderer()
 
     # Initialize UI components
     menu_bar = MenuBar(ui_manager, WINDOW_WIDTH)
@@ -85,6 +88,7 @@ def main():
 
     # Dialog state
     fen_dialog: FENDialog | None = None
+    pgn_dialog: PGNDialog | None = None
     credits_dialog: CreditsDialog | None = None
     promotion_dialog: PromotionDialog | None = None
     pending_promotion: tuple[int, int] | None = None  # Target square for promotion
@@ -108,6 +112,8 @@ def main():
             action = menu_bar.process_event(event)
             if action == "load_fen":
                 fen_dialog = FENDialog(ui_manager, (WINDOW_WIDTH, WINDOW_HEIGHT))
+            elif action == "load_pgn":
+                pgn_dialog = PGNDialog(ui_manager, (WINDOW_WIDTH, WINDOW_HEIGHT))
             elif action == "show_credits":
                 credits_dialog = CreditsDialog(ui_manager, (WINDOW_WIDTH, WINDOW_HEIGHT))
 
@@ -116,6 +122,7 @@ def main():
                 if event.ui_element == fen_dialog.ok_button:
                     try:
                         game.load_fen(fen_dialog.get_fen_string())
+                        move_list_renderer.reset_scroll()
                     except ValueError as e:
                         show_error_dialog(
                             ui_manager, (WINDOW_WIDTH, WINDOW_HEIGHT), str(e)
@@ -125,6 +132,22 @@ def main():
                 elif event.ui_element == fen_dialog.cancel_button:
                     fen_dialog.kill()
                     fen_dialog = None
+
+            # Handle PGN dialog
+            if pgn_dialog is not None and event.type == pygame_gui.UI_BUTTON_PRESSED:
+                if event.ui_element == pgn_dialog.ok_button:
+                    try:
+                        game.load_pgn(pgn_dialog.get_pgn_string())
+                        move_list_renderer.reset_scroll()
+                    except (ValueError, PGNError) as e:
+                        show_error_dialog(
+                            ui_manager, (WINDOW_WIDTH, WINDOW_HEIGHT), str(e)
+                        )
+                    pgn_dialog.kill()
+                    pgn_dialog = None
+                elif event.ui_element == pgn_dialog.cancel_button:
+                    pgn_dialog.kill()
+                    pgn_dialog = None
 
             # Handle credits dialog
             if credits_dialog is not None and event.type == pygame_gui.UI_BUTTON_PRESSED:
@@ -136,6 +159,8 @@ def main():
             if event.type == pygame_gui.UI_WINDOW_CLOSE:
                 if fen_dialog is not None and event.ui_element == fen_dialog:
                     fen_dialog = None
+                if pgn_dialog is not None and event.ui_element == pgn_dialog:
+                    pgn_dialog = None
                 if credits_dialog is not None and event.ui_element == credits_dialog:
                     credits_dialog = None
                 if promotion_dialog is not None and event.ui_element == promotion_dialog:
@@ -165,6 +190,7 @@ def main():
             # Handle board clicks
             all_dialogs_closed = (
                 fen_dialog is None
+                and pgn_dialog is None
                 and credits_dialog is None
                 and promotion_dialog is None
             )
@@ -226,6 +252,15 @@ def main():
 
         ui_manager.draw_ui(screen)
         control_panel.draw(screen)
+
+        # Draw move list (current position is last move index, or -1 if at start)
+        current_move_index = len(game.game_state.move_history) - 1
+        move_list_renderer.draw(
+            screen,
+            game.san_history,
+            current_move_index if current_move_index >= 0 else None,
+        )
+
         captured_renderer.draw(
             screen,
             game.game_state.captured_pieces,
