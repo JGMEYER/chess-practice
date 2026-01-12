@@ -4,7 +4,8 @@
       "Bash(python -m poetry run python:*)",
       "Bash(python -m poetry run pytest:*)",
       "Bash(python -m poetry show:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(.venv/Scripts/python.exe -m pytest:*)"
     ]
   }
 }
