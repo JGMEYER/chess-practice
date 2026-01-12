@@ -9,3 +9,4 @@ class King(Piece):
     move_offsets = [(1, 0), (-1, 0), (0, 1), (0, -1),   # orthogonal
                     (1,-1), (1, 1), (-1, -1), (-1, 1)]  # diagonal
     is_sliding = False
+    point_value = 0

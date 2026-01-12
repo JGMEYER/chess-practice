@@ -8,3 +8,4 @@ class Rook(Piece):
     piece_type = PieceType.ROOK
     move_offsets = [(1, 0), (-1, 0), (0, 1), (0, -1)]
     is_sliding = True
+    point_value = 5

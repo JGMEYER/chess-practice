@@ -3,7 +3,13 @@ import pygame_gui
 
 from game_controller import GameController
 from chess import AIPlayerError
-from graphics import BoardRenderer, PieceRenderer, SpriteLoader, IconLoader
+from graphics import (
+    BoardRenderer,
+    PieceRenderer,
+    SpriteLoader,
+    IconLoader,
+    CapturedPiecesRenderer,
+)
 from graphics.ui import (
     MenuBar,
     FENDialog,
@@ -71,6 +77,7 @@ def main():
     # Initialize renderers
     piece_renderer = PieceRenderer(sprite_loader)
     board_renderer = BoardRenderer(piece_renderer)
+    captured_renderer = CapturedPiecesRenderer(sprite_loader)
 
     # Initialize UI components
     menu_bar = MenuBar(ui_manager, WINDOW_WIDTH)
@@ -219,6 +226,11 @@ def main():
 
         ui_manager.draw_ui(screen)
         control_panel.draw(screen)
+        captured_renderer.draw(
+            screen,
+            game.game_state.captured_pieces,
+            board_renderer.rotated,
+        )
 
         if promotion_dialog is not None:
             promotion_dialog.draw_pieces(screen)

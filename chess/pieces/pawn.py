@@ -8,3 +8,4 @@ class Pawn(Piece):
     piece_type = PieceType.PAWN
     move_offsets = []  # Pawn has its own logic
     is_sliding = False
+    point_value = 1

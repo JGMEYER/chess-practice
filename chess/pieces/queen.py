@@ -9,3 +9,4 @@ class Queen(Piece):
     move_offsets = [(1, 0), (-1, 0), (0, 1), (0, -1),   # orthogonal
                     (1,-1), (1, 1), (-1, -1), (-1, 1)]  # diagonal
     is_sliding = True
+    point_value = 9

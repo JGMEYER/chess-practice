@@ -11,3 +11,4 @@ class Knight(Piece):
         (1, 2), (1, -2), (-1, 2), (-1, -2),
     ]
     is_sliding = False
+    point_value = 3

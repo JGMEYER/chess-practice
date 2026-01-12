@@ -9,6 +9,7 @@ class Piece:
     piece_type: PieceType  # To be set by subclasses
     move_offsets: list[tuple[int, int]] = []  # Movement pattern offsets
     is_sliding: bool = False  # True for rook, bishop, queen
+    point_value: int = 0  # Standard chess point value
 
     def __init__(self, color: Color, position: tuple[int, int] | None = None):
         """

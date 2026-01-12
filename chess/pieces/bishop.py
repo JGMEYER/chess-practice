@@ -8,3 +8,4 @@ class Bishop(Piece):
     piece_type = PieceType.BISHOP
     move_offsets = [(1, -1), (1, 1), (-1, -1), (-1, 1)]
     is_sliding = True
+    point_value = 3
