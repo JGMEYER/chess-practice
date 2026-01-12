@@ -6,6 +6,7 @@ import pygame
 
 from chess.constants import PieceType, Color
 from .constants import (
+    CAPTURED_GROUP_GAP,
     CAPTURED_PIECE_SIZE,
     CAPTURED_ROW_Y_TOP,
     CAPTURED_ROW_Y_BOTTOM,
@@ -165,7 +166,7 @@ class CapturedPiecesRenderer:
             y: Y coordinate for this row
             point_diff: Point differential to show (0 means don't show)
         """
-        group_gap = 7  # Base separation between different piece types
+        group_gap = CAPTURED_GROUP_GAP
 
         # Calculate x positions first so we can draw left-to-right
         # (rightmost pieces drawn last, appearing on top)
