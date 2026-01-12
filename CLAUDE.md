@@ -2,12 +2,12 @@
 
 ## Running the project
 ```bash
-poetry run python chess_game.py
+./.venv/Scripts/python.exe chess_game.py
 ```
 
 ## Running tests
 ```bash
-poetry run pytest
+./.venv/Scripts/python.exe -m pytest
 ```
 
 ## Package manager
