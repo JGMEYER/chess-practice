@@ -35,6 +35,8 @@ from graphics.constants import (
     SIDEBAR_WIDTH,
     CONTROL_ICON_SIZE,
     SIDEBAR_BACKGROUND,
+    MOVE_LIST_TOP_Y,
+    MOVE_LIST_BOTTOM_Y,
 )
 
 SPRITE_PATH = "assets/sprites/Chess_Pieces_Sprite.svg"
@@ -221,6 +223,13 @@ def main():
                 else:
                     game.clear_selection()
 
+            # Handle mouse wheel for move list scrolling
+            if event.type == pygame.MOUSEWHEEL and all_dialogs_closed:
+                # Check if mouse is over the sidebar area
+                mouse_x, mouse_y = pygame.mouse.get_pos()
+                if mouse_x >= SIDEBAR_X and mouse_y >= MOVE_LIST_TOP_Y and mouse_y <= MOVE_LIST_BOTTOM_Y:
+                    move_list_renderer.handle_scroll(event.y, len(game.san_history))
+
         # Update AI
         try:
             game.update_ai()
@@ -249,10 +258,6 @@ def main():
             (0, MENU_BUTTON_HEIGHT),
             (WINDOW_WIDTH, MENU_BUTTON_HEIGHT),
         )
-
-        ui_manager.draw_ui(screen)
-        control_panel.draw(screen)
-
         # Draw move list (current position is last move index, or -1 if at start)
         current_move_index = len(game.game_state.move_history) - 1
         move_list_renderer.draw(
@@ -266,6 +271,9 @@ def main():
             game.game_state.captured_pieces,
             board_renderer.rotated,
         )
+
+        ui_manager.draw_ui(screen)
+        control_panel.draw(screen)
 
         if promotion_dialog is not None:
             promotion_dialog.draw_pieces(screen)
