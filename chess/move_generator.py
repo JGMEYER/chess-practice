@@ -233,7 +233,6 @@ class MoveGenerator:
                 if possible_diagonal == taking_square:
                     moves.append(possible_diagonal)
         
-        # (TODO) Promotion logic
         return moves
 
     def _get_sliding_moves(

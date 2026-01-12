@@ -102,8 +102,8 @@ chess-practice/
 - [x] King check logic
 - [x] Castling
 - [x] Undo/Redo UI
-- [ ] Flip board
-- [ ] Pawn promotion
-- [ ] AI move integration
+- [x] Flip board
+- [x] Pawn promotion
+- [x] AI move integration
 - [ ] AI chat / analysis
 - [ ] AI analysis bar
