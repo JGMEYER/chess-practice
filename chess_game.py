@@ -242,9 +242,15 @@ def main():
             game.game_state.can_undo(), game.game_state.can_redo()
         )
 
+        # Get last move squares for highlighting
+        last_move = game.game_state.last_move
+        last_move_squares = None
+        if last_move:
+            last_move_squares = (last_move.from_square, last_move.to_square)
+
         # Draw
         board_renderer.draw(
-            screen, game.board, game.selected_square, game.valid_moves
+            screen, game.board, game.selected_square, game.valid_moves, last_move_squares
         )
 
         # Draw sidebar

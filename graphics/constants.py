@@ -11,6 +11,10 @@ LABEL_COLOR = (134, 133, 126)  # #86857E - gray
 SELECTED_SQUARE = (244, 246, 128)  # Bright yellow for selected piece
 VALID_MOVE_DOT = (128, 128, 128, 128)  # Semi-transparent gray dot
 
+# Last move highlight colors (muted blue-green tint on light/dark squares)
+LAST_MOVE_LIGHT = (205, 210, 184)  # Light square with subtle blue-green tint
+LAST_MOVE_DARK = (148, 157, 132)  # Dark square with subtle blue-green tint
+
 # Board dimensions
 SQUARE_SIZE = 80
 BOARD_SIZE = 8
