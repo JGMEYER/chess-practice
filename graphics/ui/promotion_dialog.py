@@ -9,7 +9,7 @@ from pygame_gui.elements import UIButton
 from chess.constants import PieceType, Color
 
 if TYPE_CHECKING:
-    from graphics.sprites import SpriteLoader
+    from graphics.piece_sprites import PieceSpriteLoader
 
 
 # Pieces available for promotion (no pawn or king)
@@ -24,7 +24,7 @@ class PromotionDialog(pygame_gui.elements.UIWindow):
         manager: pygame_gui.UIManager,
         window_size: tuple[int, int],
         color: Color,
-        sprite_loader: SpriteLoader,
+        sprite_loader: PieceSpriteLoader,
     ):
         """
         Initialize the promotion dialog.

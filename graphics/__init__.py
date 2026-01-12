@@ -1,6 +1,6 @@
 from .board_renderer import BoardRenderer
 from .piece_renderer import PieceRenderer
-from .sprites import SpriteLoader
+from .piece_sprites import PieceSpriteLoader
 from .icon_loader import IconLoader
 from .captured_pieces_renderer import CapturedPiecesRenderer
 from .move_list_renderer import MoveListRenderer
@@ -8,7 +8,7 @@ from .move_list_renderer import MoveListRenderer
 __all__ = [
     "BoardRenderer",
     "PieceRenderer",
-    "SpriteLoader",
+    "PieceSpriteLoader",
     "IconLoader",
     "CapturedPiecesRenderer",
     "MoveListRenderer",

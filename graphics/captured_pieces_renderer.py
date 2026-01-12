@@ -17,7 +17,7 @@ from .constants import (
 
 if TYPE_CHECKING:
     from chess import Piece
-    from .sprites import SpriteLoader
+    from .piece_sprites import PieceSpriteLoader
 
 
 # Sort order for tiebreaks (knights before bishops)
@@ -64,19 +64,13 @@ PIECE_KERNING = {
     (PieceType.KNIGHT, PieceType.QUEEN): -1,
     # Bishop to queen: queen is dense, bishop open on right
     (PieceType.BISHOP, PieceType.QUEEN): -1,
-    # Pawn to knight: default gap works
-    (PieceType.PAWN, PieceType.KNIGHT): 0,
-    # Pawn to rook: pawn narrow - add space
-    (PieceType.PAWN, PieceType.ROOK): 1,
-    # Pawn to queen: pawn narrow, queen dense - add space
-    (PieceType.PAWN, PieceType.QUEEN): 1,
 }
 
 
 class CapturedPiecesRenderer:
     """Renders captured pieces in the sidebar."""
 
-    def __init__(self, sprite_loader: SpriteLoader):
+    def __init__(self, sprite_loader: PieceSpriteLoader):
         """
         Initialize the captured pieces renderer.
 
@@ -89,14 +83,13 @@ class CapturedPiecesRenderer:
         self._load_scaled_sprites()
 
     def _load_scaled_sprites(self) -> None:
-        """Create smaller versions of sprites for captured display."""
+        """Load sprites at the captured piece size (rendered from SVG for clarity)."""
         for color in Color:
             for piece_type in PieceType:
-                original = self._sprite_loader.get_sprite(color, piece_type)
-                scaled = pygame.transform.smoothscale(
-                    original, (CAPTURED_PIECE_SIZE, CAPTURED_PIECE_SIZE)
+                sprite = self._sprite_loader.get_sprite_at_size(
+                    color, piece_type, CAPTURED_PIECE_SIZE
                 )
-                self._scaled_sprites[(color, piece_type)] = scaled
+                self._scaled_sprites[(color, piece_type)] = sprite
 
     def _sort_key(self, piece: Piece) -> tuple[int, int]:
         """Sort key for captured pieces: by point value, then by piece type order."""

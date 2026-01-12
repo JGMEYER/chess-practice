@@ -20,7 +20,7 @@ MENU_BAR_PADDING = 10  # Padding below menu bar
 MENU_BAR_HEIGHT = MENU_BUTTON_HEIGHT + MENU_BAR_PADDING  # Total menu bar area
 
 # Sidebar dimensions
-SIDEBAR_WIDTH = 200
+SIDEBAR_WIDTH = 216
 CONTROL_BUTTON_SIZE = 40
 CONTROL_ICON_SIZE = 32  # Smaller than button to show button background/hover states
 CONTROL_BUTTON_SPACING = 10

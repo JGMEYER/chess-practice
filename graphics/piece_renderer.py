@@ -3,7 +3,7 @@ from __future__ import annotations
 import pygame
 
 from chess.board import Board
-from .sprites import SpriteLoader
+from .piece_sprites import PieceSpriteLoader
 from .constants import (
     SQUARE_SIZE,
     BOARD_SIZE,
@@ -15,7 +15,7 @@ from .constants import (
 class PieceRenderer:
     """Renders chess pieces on the board."""
 
-    def __init__(self, sprite_loader: SpriteLoader):
+    def __init__(self, sprite_loader: PieceSpriteLoader):
         """
         Initialize the piece renderer.
 

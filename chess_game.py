@@ -6,7 +6,7 @@ from chess import AIPlayerError, PGNError
 from graphics import (
     BoardRenderer,
     PieceRenderer,
-    SpriteLoader,
+    PieceSpriteLoader,
     IconLoader,
     CapturedPiecesRenderer,
     MoveListRenderer,
@@ -72,7 +72,7 @@ def main():
     )
 
     # Load sprites and icons
-    sprite_loader = SpriteLoader(SPRITE_PATH)
+    sprite_loader = PieceSpriteLoader(SPRITE_PATH)
     icon_loader = IconLoader(CONTROL_ICON_SIZE)
     icon_loader.load_icon("undo", "assets/sprites/undo.svg")
     icon_loader.load_icon("redo", "assets/sprites/redo.svg")
