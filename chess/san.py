@@ -14,8 +14,8 @@ if TYPE_CHECKING:
     from .piece import Piece
 
 
-class NotationGenerator:
-    """Generates Standard Algebraic Notation (SAN) from Move objects."""
+class SANGenerator:
+    """Generates Standard Algebraic Notation (SAN) strings from Move objects."""
 
     PIECE_LETTERS = {
         PieceType.KING: "K",

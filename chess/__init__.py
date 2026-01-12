@@ -8,7 +8,7 @@ from .fen import FENParser, FENData, CastlingRights, FENError, FENGenerator
 from .fen_loader import FENLoader
 from .config import Config, AIConfig, load_config
 from .ai_player import AIPlayer, AIPlayerError
-from .notation import NotationGenerator
+from .san import SANGenerator
 from .pgn import PGNParser, PGNData, PGNError
 from .pgn_loader import PGNLoader
 
@@ -37,7 +37,7 @@ __all__ = [
     "load_config",
     "AIPlayer",
     "AIPlayerError",
-    "NotationGenerator",
+    "SANGenerator",
     "PGNParser",
     "PGNData",
     "PGNError",

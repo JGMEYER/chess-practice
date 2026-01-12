@@ -68,74 +68,74 @@ class TestPGNParserMovetext:
         """Simple move sequence should be parsed correctly."""
         pgn = "1. e4 e5 2. Nf3 Nc6 3. Bb5"
         data = PGNParser.parse(pgn)
-        assert data.moves == ["e4", "e5", "Nf3", "Nc6", "Bb5"]
+        assert data.san_moves == ["e4", "e5", "Nf3", "Nc6", "Bb5"]
 
     def test_parse_moves_with_captures(self):
         """Captures with 'x' should be preserved."""
         pgn = "1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Bxc6 dxc6"
         data = PGNParser.parse(pgn)
-        assert "Bxc6" in data.moves
-        assert "dxc6" in data.moves
+        assert "Bxc6" in data.san_moves
+        assert "dxc6" in data.san_moves
 
     def test_parse_castling(self):
         """Castling notation should be recognized."""
         pgn = "1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. O-O Nf6 5. d3 O-O"
         data = PGNParser.parse(pgn)
-        assert "O-O" in data.moves
+        assert "O-O" in data.san_moves
         # Both white and black castling
-        assert data.moves.count("O-O") == 2
+        assert data.san_moves.count("O-O") == 2
 
     def test_parse_queenside_castling(self):
         """Queenside castling should be parsed."""
         pgn = "1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Nf3 Be7 5. Bf4 O-O 6. e3 c6 7. Bd3 Nbd7 8. O-O"
         data = PGNParser.parse(pgn)
-        assert "O-O" in data.moves
+        assert "O-O" in data.san_moves
 
     def test_parse_promotion(self):
         """Pawn promotion should be preserved."""
         pgn = "1. e4 e5 2. d4 exd4 3. c3 dxc3 4. Bc4 cxb2 5. Bxb2 d5 6. exd5 Qxd5 7. a4 Bb4+ 8. Nc3 Qe5+ 9. Qe2 Qxe2+ 10. Nxe2 Bd6 11. O-O-O Nf6 12. Nf4 Bg4 13. Be2 Bxe2 14. Nxe2 c6 15. Rhe1 O-O 16. Nf4 Rd8 17. Nd3 Na6 18. Rxe8+ Rxe8 19. Nf4 Bc5 20. Re1 Rxe1+ 21. Kd2 Rf1 22. f3 Bb4+ 23. Ke2 Ra1 24. Nd3 Bd6 25. g4 Nc5 26. Nxc5 Bxc5 27. h4 Rxa4 28. g5 Nd5 29. Ke1 Ra1+ 30. Kf2 Ra2 31. Bd4 Bxd4+ 32. Nxd4 Rxb2+ 33. Ke1 Rb1+ 34. Kd2 c5 35. Nb5 a6 36. Nc3 Nxc3 37. Kxc3 c4 38. f4 f6 39. Kxc4 fxg5 40. hxg5 Rf1 41. Kd5 Rxf4 42. Ke6 g6 43. Kf6 Rf5 44. Kg7 Rxg5+ 45. Kxh7 Kf7 46. Kh6 Rg4 47. Kh7 Kf6 48. Kh6 Rg3 49. Kh7 g5 50. Kh6 Rh3+ 51. Kg7 Ke5 52. Kf7 g4 53. Ke7 g3 54. Kd7 g2 55. Kc6 g1=Q"
         data = PGNParser.parse(pgn)
-        assert "g1=Q" in data.moves
+        assert "g1=Q" in data.san_moves
 
     def test_parse_check_indicators(self):
         """Check (+) and checkmate (#) indicators should be preserved."""
         pgn = "1. e4 e5 2. Qh5 Nc6 3. Bc4 Nf6 4. Qxf7#"
         data = PGNParser.parse(pgn)
-        assert "Qxf7#" in data.moves or "Qxf7" in data.moves
+        assert "Qxf7#" in data.san_moves or "Qxf7" in data.san_moves
 
     def test_parse_removes_comments(self):
         """Comments in braces should be removed."""
         pgn = "1. e4 {best move} e5 2. Nf3 {knights before bishops} Nc6"
         data = PGNParser.parse(pgn)
-        assert data.moves == ["e4", "e5", "Nf3", "Nc6"]
-        assert "{" not in str(data.moves)
+        assert data.san_moves == ["e4", "e5", "Nf3", "Nc6"]
+        assert "{" not in str(data.san_moves)
 
     def test_parse_removes_variations(self):
         """Variations in parentheses should be removed."""
         pgn = "1. e4 e5 (1... c5 2. Nf3 d6) 2. Nf3 Nc6"
         data = PGNParser.parse(pgn)
-        assert data.moves == ["e4", "e5", "Nf3", "Nc6"]
-        assert "c5" not in data.moves
+        assert data.san_moves == ["e4", "e5", "Nf3", "Nc6"]
+        assert "c5" not in data.san_moves
 
     def test_parse_removes_nags(self):
         """Numeric Annotation Glyphs ($1, etc.) should be removed."""
         pgn = "1. e4 $1 e5 $2 2. Nf3 $13 Nc6"
         data = PGNParser.parse(pgn)
-        assert "$" not in str(data.moves)
+        assert "$" not in str(data.san_moves)
 
     def test_parse_result_from_movetext(self):
         """Result at end of movetext should be extracted."""
         pgn = "1. e4 e5 1-0"
         data = PGNParser.parse(pgn)
         assert data.result == "1-0"
-        assert "1-0" not in data.moves
+        assert "1-0" not in data.san_moves
 
     def test_parse_normalizes_castling(self):
         """Castling with zeros (0-0) should be normalized to O-O."""
         pgn = "1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. 0-0"
         data = PGNParser.parse(pgn)
-        assert "O-O" in data.moves
-        assert "0-0" not in data.moves
+        assert "O-O" in data.san_moves
+        assert "0-0" not in data.san_moves
 
 
 class TestPGNParserErrors:
@@ -268,5 +268,5 @@ class TestPGNDataDefaults:
         assert data.white == "?"
         assert data.black == "?"
         assert data.result == "*"
-        assert data.moves == []
+        assert data.san_moves == []
         assert data.fen is None

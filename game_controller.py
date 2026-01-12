@@ -13,7 +13,7 @@ from chess import (
     load_config,
     AIPlayer,
     AIPlayerError,
-    NotationGenerator,
+    SANGenerator,
     PGNLoader,
     PGNError,
 )
@@ -199,7 +199,7 @@ class GameController:
             promoted_to=promoted_to,
         )
 
-        return NotationGenerator.move_to_san(
+        return SANGenerator.move_to_san(
             move, self.board, self.game_state, self.move_generator
         )
 

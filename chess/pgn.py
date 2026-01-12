@@ -29,7 +29,7 @@ class PGNData:
     extra_tags: dict[str, str] = field(default_factory=dict)
 
     # Move list as SAN strings (e.g., ["e4", "e5", "Nf3", "Nc6"])
-    moves: list[str] = field(default_factory=list)
+    san_moves: list[str] = field(default_factory=list)
 
     # Starting position FEN (if game doesn't start from standard position)
     fen: str | None = None
@@ -92,7 +92,7 @@ class PGNParser:
         # Parse movetext if present
         if movetext_lines:
             movetext = " ".join(movetext_lines)
-            data.moves = cls._parse_movetext(movetext)
+            data.san_moves = cls._parse_movetext(movetext)
 
             # Extract result from movetext if not in tags
             result_match = cls.RESULT_PATTERN.search(movetext)
@@ -204,3 +204,29 @@ class PGNParser:
             return False
 
         return True
+
+    @classmethod
+    def to_movetext(cls, san_moves: list[str]) -> str:
+        """
+        Convert a list of SAN moves to PGN movetext format.
+
+        Args:
+            san_moves: List of SAN notation strings, e.g. ["e4", "e5", "Nf3", "Nc6"]
+
+        Returns:
+            PGN formatted movetext string, e.g. "1.e4 e5 2.Nf3 Nc6"
+        """
+        if not san_moves:
+            return ""
+
+        parts = []
+        for i, move in enumerate(san_moves):
+            if i % 2 == 0:
+                # White's move - add move number
+                move_num = i // 2 + 1
+                parts.append(f"{move_num}.{move}")
+            else:
+                # Black's move - just the move
+                parts.append(move)
+
+        return " ".join(parts)

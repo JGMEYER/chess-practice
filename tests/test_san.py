@@ -2,7 +2,7 @@
 
 import pytest
 
-from chess import NotationGenerator, Board, MoveGenerator
+from chess import SANGenerator, Board, MoveGenerator
 from chess.game_state import GameState
 from chess.fen_loader import FENLoader
 from chess.move import Move
@@ -10,7 +10,7 @@ from chess.constants import PieceType, Color
 from chess.pieces import Pawn, Knight, Bishop, Rook, Queen, King
 
 
-class TestNotationGeneratorBasicMoves:
+class TestSANGeneratorBasicMoves:
     """Tests for basic move notation generation."""
 
     @pytest.fixture
@@ -34,7 +34,7 @@ class TestNotationGeneratorBasicMoves:
             piece=pawn,
         )
 
-        san = NotationGenerator.move_to_san(
+        san = SANGenerator.move_to_san(
             move, board, game_state, move_generator, include_check=False
         )
         assert san == "e4"
@@ -50,7 +50,7 @@ class TestNotationGeneratorBasicMoves:
             piece=pawn,
         )
 
-        san = NotationGenerator.move_to_san(
+        san = SANGenerator.move_to_san(
             move, board, game_state, move_generator, include_check=False
         )
         assert san == "e3"
@@ -66,7 +66,7 @@ class TestNotationGeneratorBasicMoves:
             piece=knight,
         )
 
-        san = NotationGenerator.move_to_san(
+        san = SANGenerator.move_to_san(
             move, board, game_state, move_generator, include_check=False
         )
         assert san == "Nf3"
@@ -85,13 +85,13 @@ class TestNotationGeneratorBasicMoves:
             piece=bishop,
         )
 
-        san = NotationGenerator.move_to_san(
+        san = SANGenerator.move_to_san(
             move, board, game_state, move_generator, include_check=False
         )
         assert san == "Bc4"
 
 
-class TestNotationGeneratorCaptures:
+class TestSANGeneratorCaptures:
     """Tests for capture notation."""
 
     @pytest.fixture
@@ -126,7 +126,7 @@ class TestNotationGeneratorCaptures:
             captured_piece=target,
         )
 
-        san = NotationGenerator.move_to_san(
+        san = SANGenerator.move_to_san(
             move, board, game_state, move_generator, include_check=False
         )
         assert san == "Nxe5"
@@ -144,13 +144,13 @@ class TestNotationGeneratorCaptures:
             captured_piece=target,
         )
 
-        san = NotationGenerator.move_to_san(
+        san = SANGenerator.move_to_san(
             move, board, game_state, move_generator, include_check=False
         )
         assert san == "dxe5"
 
 
-class TestNotationGeneratorCastling:
+class TestSANGeneratorCastling:
     """Tests for castling notation."""
 
     @pytest.fixture
@@ -176,7 +176,7 @@ class TestNotationGeneratorCastling:
             is_castling=True,
         )
 
-        san = NotationGenerator.move_to_san(
+        san = SANGenerator.move_to_san(
             move, board, game_state, move_generator, include_check=False
         )
         assert san == "O-O"
@@ -193,13 +193,13 @@ class TestNotationGeneratorCastling:
             is_castling=True,
         )
 
-        san = NotationGenerator.move_to_san(
+        san = SANGenerator.move_to_san(
             move, board, game_state, move_generator, include_check=False
         )
         assert san == "O-O-O"
 
 
-class TestNotationGeneratorPromotion:
+class TestSANGeneratorPromotion:
     """Tests for pawn promotion notation."""
 
     @pytest.fixture
@@ -235,7 +235,7 @@ class TestNotationGeneratorPromotion:
             promoted_to=promoted,
         )
 
-        san = NotationGenerator.move_to_san(
+        san = SANGenerator.move_to_san(
             move, board, game_state, move_generator, include_check=False
         )
         assert san == "e8=Q"
@@ -254,13 +254,13 @@ class TestNotationGeneratorPromotion:
             promoted_to=promoted,
         )
 
-        san = NotationGenerator.move_to_san(
+        san = SANGenerator.move_to_san(
             move, board, game_state, move_generator, include_check=False
         )
         assert san == "e8=N"
 
 
-class TestNotationGeneratorDisambiguation:
+class TestSANGeneratorDisambiguation:
     """Tests for move disambiguation."""
 
     @pytest.fixture
@@ -298,7 +298,7 @@ class TestNotationGeneratorDisambiguation:
             piece=knight,
         )
 
-        san = NotationGenerator.move_to_san(
+        san = SANGenerator.move_to_san(
             move, board, game_state, move_generator, include_check=False
         )
         # Should be Nbd2, not just Nd2
@@ -330,14 +330,14 @@ class TestNotationGeneratorDisambiguation:
             piece=rook1,
         )
 
-        san = NotationGenerator.move_to_san(
+        san = SANGenerator.move_to_san(
             move, board, game_state, move_generator, include_check=False
         )
         # Should be R1a4
         assert san == "R1a4"
 
 
-class TestNotationGeneratorCheckIndicators:
+class TestSANGeneratorCheckIndicators:
     """Tests for check and checkmate indicators."""
 
     def test_check_indicator(self):
@@ -363,7 +363,7 @@ class TestNotationGeneratorCheckIndicators:
             piece=white_queen,
         )
 
-        san = NotationGenerator.move_to_san(
+        san = SANGenerator.move_to_san(
             move, board, game_state, move_generator, include_check=True
         )
         # This would capture the king, which shouldn't happen in legal chess
@@ -391,7 +391,7 @@ class TestNotationGeneratorCheckIndicators:
             piece=white_queen,
         )
 
-        san = NotationGenerator.move_to_san(
+        san = SANGenerator.move_to_san(
             move, board, game_state, move_generator, include_check=True
         )
         assert san == "Qd8+"

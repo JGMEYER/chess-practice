@@ -93,13 +93,13 @@ class PGNLoader:
             self.fen_loader.load_starting_position()
 
         # Execute each move
-        for i, san in enumerate(pgn_data.moves):
+        for i, san in enumerate(pgn_data.san_moves):
             try:
                 self._execute_san_move(san)
             except PGNError as e:
                 raise PGNError(f"Error at move {i + 1} ({san}): {e}") from e
 
-        return pgn_data.moves
+        return pgn_data.san_moves
 
     def _execute_san_move(self, san: str) -> None:
         """
