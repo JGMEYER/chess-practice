@@ -2,12 +2,12 @@
 
 ## Running the project
 ```bash
-./.venv/Scripts/python.exe chess_game.py
+cd /c/Users/Justian/Documents/Scripts/chess-practice && ./.venv/Scripts/python.exe chess_game.py
 ```
 
 ## Running tests
 ```bash
-./.venv/Scripts/python.exe -m pytest
+cd /c/Users/Justian/Documents/Scripts/chess-practice && .venv/Scripts/python.exe -m pytest -v
 ```
 
 ## Package manager

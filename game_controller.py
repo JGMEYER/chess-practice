@@ -70,10 +70,9 @@ class GameController:
         return self.game_state.players[self.game_state.current_turn] == PlayerType.HUMAN
 
     @property
-    def is_vs_ai(self) -> bool:
-        """Check if this is a Human vs AI game."""
-        players = self.game_state.players.values()
-        return PlayerType.AI in players and PlayerType.HUMAN in players
+    def is_at_end_of_history(self) -> bool:
+        """Check if we're at the latest position (no redo available)."""
+        return not self.game_state.can_redo()
 
     def clear_selection(self) -> None:
         """Clear the current piece selection."""
@@ -205,40 +204,20 @@ class GameController:
         )
 
     def undo(self) -> None:
-        """
-        Undo the last move(s).
-
-        In Human vs AI games, undoes moves until it's a human's turn.
-        """
+        """Undo the last move."""
         if not self.game_state.can_undo():
             return
 
         self.move_executor.undo_move()
-
-        # In Human vs AI, undo again if it's now AI's turn
-        if self.is_vs_ai and not self.is_human_turn:
-            if self.game_state.can_undo():
-                self.move_executor.undo_move()
-
         self.clear_selection()
         self._cancel_ai_thinking()
 
     def redo(self) -> None:
-        """
-        Redo the last undone move(s).
-
-        In Human vs AI games, redoes moves until it's a human's turn.
-        """
+        """Redo the last undone move."""
         if not self.game_state.can_redo():
             return
 
         self.move_executor.redo_move()
-
-        # In Human vs AI, redo again if it's now AI's turn
-        if self.is_vs_ai and not self.is_human_turn:
-            if self.game_state.can_redo():
-                self.move_executor.redo_move()
-
         self.clear_selection()
         self._cancel_ai_thinking()
 
@@ -294,8 +273,8 @@ class GameController:
 
         is_ai_turn = not self.is_human_turn
 
-        # Start AI thinking if it's AI's turn and not already thinking
-        if is_ai_turn and self._ai_future is None:
+        # Start AI thinking if it's AI's turn, at end of history, and not already thinking
+        if is_ai_turn and self._ai_future is None and self.is_at_end_of_history:
             self._ai_thinking_for_fen = FENGenerator.generate(
                 self.board, self.game_state
             )
