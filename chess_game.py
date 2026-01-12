@@ -10,6 +10,7 @@ from graphics import (
     IconLoader,
     CapturedPiecesRenderer,
     MoveListRenderer,
+    OpeningRenderer,
 )
 from graphics.ui import (
     MenuBar,
@@ -83,6 +84,7 @@ def main():
     board_renderer = BoardRenderer(piece_renderer)
     captured_renderer = CapturedPiecesRenderer(sprite_loader)
     move_list_renderer = MoveListRenderer()
+    opening_renderer = OpeningRenderer()
 
     # Initialize UI components
     menu_bar = MenuBar(ui_manager, WINDOW_WIDTH)
@@ -264,6 +266,10 @@ def main():
             (0, MENU_BUTTON_HEIGHT),
             (WINDOW_WIDTH, MENU_BUTTON_HEIGHT),
         )
+
+        # Draw opening name if detected
+        opening_renderer.draw(screen, game.current_opening)
+
         # Draw move list (current position is last move index, or -1 if at start)
         current_move_index = len(game.game_state.move_history) - 1
         move_list_renderer.draw(

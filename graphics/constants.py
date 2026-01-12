@@ -52,8 +52,11 @@ CAPTURED_ROW_Y_TOP = CAPTURED_ROW_Y_BOTTOM - CAPTURED_ROW_SPACING  # Top row
 CAPTURED_ROW_X = SIDEBAR_X + 10
 CAPTURED_GROUP_GAP = 7  # Base separation between different piece types
 
+# Opening name display
+OPENING_NAME_Y = SIDEBAR_Y + 55  # Below control buttons
+
 # Move list display
-MOVE_LIST_TOP_Y = SIDEBAR_Y + 70  # Below control buttons
+MOVE_LIST_TOP_Y = SIDEBAR_Y + 70  # Below opening name
 MOVE_LIST_BOTTOM_Y = CAPTURED_ROW_Y_TOP - 15  # Above captured pieces with padding
 MOVE_LIST_HEIGHT = MOVE_LIST_BOTTOM_Y - MOVE_LIST_TOP_Y
 MOVE_LIST_LINE_HEIGHT = 18

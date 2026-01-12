@@ -14,10 +14,12 @@ from chess import (
     AIPlayer,
     AIPlayerError,
     SANGenerator,
+    PGNParser,
     PGNLoader,
     PGNError,
 )
 from chess.game_state import GameState
+from chess.patterns import Opening, load_openings
 
 if TYPE_CHECKING:
     from chess import PieceType
@@ -48,6 +50,10 @@ class GameController:
         self._executor = ThreadPoolExecutor(max_workers=1)
         self._ai_future: Future | None = None
         self._ai_thinking_for_fen: str | None = None
+
+        # Opening detection
+        self._openings_repo = load_openings()
+        self.current_opening: Opening | None = None
 
         self._init_ai()
         self.fen_loader.load_starting_position()
@@ -145,6 +151,7 @@ class GameController:
             self.san_history = self.san_history[: len(self.game_state.move_history) - 1]
 
         self.san_history.append(san)
+        self._update_current_opening()
         self.clear_selection()
         self._cancel_ai_thinking()
 
@@ -209,6 +216,7 @@ class GameController:
             return
 
         self.move_executor.undo_move()
+        self._update_current_opening()
         self.clear_selection()
         self._cancel_ai_thinking()
 
@@ -218,6 +226,7 @@ class GameController:
             return
 
         self.move_executor.redo_move()
+        self._update_current_opening()
         self.clear_selection()
         self._cancel_ai_thinking()
 
@@ -233,6 +242,7 @@ class GameController:
         """
         self.fen_loader.load(fen_string)
         self.san_history.clear()
+        self._update_current_opening()
         self.clear_selection()
         self._cancel_ai_thinking()
 
@@ -252,6 +262,7 @@ class GameController:
         pgn_loader = PGNLoader(self.board, self.game_state)
         san_moves = pgn_loader.load(pgn_string)
         self.san_history = san_moves.copy()
+        self._update_current_opening()
         self.clear_selection()
         self._cancel_ai_thinking()
         return san_moves
@@ -260,6 +271,18 @@ class GameController:
         """Cancel any pending AI computation."""
         self._ai_future = None
         self._ai_thinking_for_fen = None
+
+    def _update_current_opening(self) -> None:
+        """Update the cached opening based on current position in history."""
+        # Only consider moves up to the current position (not undone moves)
+        current_move_count = len(self.game_state.move_history)
+
+        if current_move_count > 0:
+            current_moves = self.san_history[:current_move_count]
+            movetext = PGNParser.to_movetext(current_moves)
+            self.current_opening = self._openings_repo.find_by_moves(movetext)
+        else:
+            self.current_opening = None
 
     def update_ai(self) -> None:
         """
@@ -293,6 +316,7 @@ class GameController:
                     san = self._generate_san_for_move(from_sq, to_sq, promotion_piece)
                     self.move_executor.execute_move(from_sq, to_sq, promotion_piece)
                     self.san_history.append(san)
+                    self._update_current_opening()
                     self.clear_selection()
             finally:
                 self._ai_future = None

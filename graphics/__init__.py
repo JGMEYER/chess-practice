@@ -4,6 +4,7 @@ from .piece_sprites import PieceSpriteLoader
 from .icon_loader import IconLoader
 from .captured_pieces_renderer import CapturedPiecesRenderer
 from .move_list_renderer import MoveListRenderer
+from .opening_renderer import OpeningRenderer
 
 __all__ = [
     "BoardRenderer",
@@ -12,4 +13,5 @@ __all__ = [
     "IconLoader",
     "CapturedPiecesRenderer",
     "MoveListRenderer",
+    "OpeningRenderer",
 ]
