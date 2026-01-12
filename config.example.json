@@ -1,0 +1,7 @@
+{
+  "stockfish_path": "/usr/local/bin/stockfish",
+  "ai": {
+    "elo": 1400,
+    "think_time_ms": 1000
+  }
+}

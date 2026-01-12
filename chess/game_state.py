@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from .constants import Color, PieceType
+from .constants import Color, PieceType, PlayerType
 from .move import Move
 from .piece import Piece
 
@@ -22,6 +22,10 @@ class GameState:
         self.halfmove_clock: int = 0
         self.fullmove_number: int = 1
         self._initial_en_passant_target: tuple[int, int] | None = None
+        self.players: dict[Color, PlayerType] = {
+            Color.WHITE: PlayerType.HUMAN,
+            Color.BLACK: PlayerType.AI,
+        }
 
     @property
     def castling_rights(self) -> CastlingRights:

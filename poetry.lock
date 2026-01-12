@@ -474,6 +474,18 @@ files = [
 yaml = ["pyyaml (>=3.10)"]
 
 [[package]]
+name = "stockfish"
+version = "4.0.5"
+description = "Wraps the open-source Stockfish chess engine for easy integration into python."
+optional = false
+python-versions = ">=3.10"
+groups = ["main"]
+files = [
+    {file = "stockfish-4.0.5-py3-none-any.whl", hash = "sha256:234fa50194d021b3b4dd399c0b5ac33b68e7156ebe31c9ef2c6cab370909332f"},
+    {file = "stockfish-4.0.5.tar.gz", hash = "sha256:25b47a9ce78d0af4765e4c3dca67ad7813d7735eaf99d273fb7fcaf8c66698f3"},
+]
+
+[[package]]
 name = "tinycss2"
 version = "1.5.1"
 description = "A tiny CSS parser"
@@ -506,5 +518,5 @@ files = [
 
 [metadata]
 lock-version = "2.1"
-python-versions = "^3.12"
-content-hash = "ca9bee4a0d2358c12f28e83a91ebd98672bae503e1eb9f8a9ffdf15d9a4ccbd5"
+python-versions = ">=3.12"
+content-hash = "2e77b07bd2e69cd695ed88519f8c8dba1849640383853f3633616cc24db275ea"

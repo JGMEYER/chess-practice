@@ -21,3 +21,6 @@ build/
 # Environment
 .env
 .env.local
+
+# Config (user-specific)
+config.json

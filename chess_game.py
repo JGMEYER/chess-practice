@@ -1,7 +1,18 @@
 import pygame
 import pygame_gui
+from concurrent.futures import ThreadPoolExecutor, Future
 
-from chess import Board, MoveGenerator, MoveExecutor, FENLoader
+from chess import (
+    Board,
+    MoveGenerator,
+    MoveExecutor,
+    FENLoader,
+    FENGenerator,
+    PlayerType,
+    load_config,
+    AIPlayer,
+    AIPlayerError,
+)
 from chess.game_state import GameState
 from graphics import BoardRenderer, PieceRenderer, SpriteLoader, IconLoader
 from graphics.ui import (
@@ -93,6 +104,20 @@ def main():
     move_generator = MoveGenerator()
     move_executor = MoveExecutor(board, game_state)
 
+    # Initialize AI player
+    config = load_config()
+    ai_player: AIPlayer | None = None
+    ai_error_shown = False
+    try:
+        ai_player = AIPlayer(config)
+    except AIPlayerError as e:
+        print(f"AI player disabled: {e}")
+
+    # Thread pool for AI moves (single thread to prevent race conditions)
+    executor = ThreadPoolExecutor(max_workers=1)
+    ai_future: Future | None = None
+    ai_thinking_for_fen: str | None = None  # Track which position AI is computing for
+
     clock = pygame.time.Clock()
 
     # Selection state
@@ -126,6 +151,9 @@ def main():
                         fen_loader.load(fen_string)
                         selected_square = None
                         valid_moves = []
+                        # Cancel any pending AI move (position changed)
+                        ai_future = None
+                        ai_thinking_for_fen = None
                     except ValueError as e:
                         show_error_dialog(
                             ui_manager, (WINDOW_WIDTH, WINDOW_HEIGHT), str(e)
@@ -166,29 +194,56 @@ def main():
                     selected_square = None
                     valid_moves = []
 
-            # Handle control panel actions (only when no promotion dialog)
-            if promotion_dialog is None:
+            # Handle control panel actions (only when no promotion dialog and not AI thinking)
+            ai_is_thinking = ai_future is not None
+            if promotion_dialog is None and not ai_is_thinking:
                 control_action = control_panel.process_event(event)
+
+                # Check if we're in Human vs AI mode (for paired undo/redo)
+                is_vs_ai = (
+                    PlayerType.AI in game_state.players.values()
+                    and PlayerType.HUMAN in game_state.players.values()
+                )
+
                 if control_action == "undo":
-                    move_executor.undo_move()
-                    selected_square = None
-                    valid_moves = []
+                    if game_state.can_undo():
+                        move_executor.undo_move()
+                        # In Human vs AI, undo again if it's now AI's turn
+                        if is_vs_ai and game_state.players[game_state.current_turn] == PlayerType.AI:
+                            if game_state.can_undo():
+                                move_executor.undo_move()
+                        selected_square = None
+                        valid_moves = []
+                        # Cancel any pending AI move (position changed)
+                        ai_future = None
+                        ai_thinking_for_fen = None
                 elif control_action == "redo":
-                    move_executor.redo_move()
-                    selected_square = None
-                    valid_moves = []
+                    if game_state.can_redo():
+                        move_executor.redo_move()
+                        # In Human vs AI, redo again if it's now AI's turn
+                        if is_vs_ai and game_state.players[game_state.current_turn] == PlayerType.AI:
+                            if game_state.can_redo():
+                                move_executor.redo_move()
+                        selected_square = None
+                        valid_moves = []
+                        # Cancel any pending AI move (position changed)
+                        ai_future = None
+                        ai_thinking_for_fen = None
                 elif control_action == "rotate":
                     board_renderer.toggle_rotation()
                     selected_square = None
                     valid_moves = []
 
-            # Handle board clicks (only when no dialog is open)
+            # Handle board clicks (only when no dialog is open and not AI's turn)
             all_dialogs_closed = (
                 fen_dialog is None
                 and credits_dialog is None
                 and promotion_dialog is None
             )
-            if all_dialogs_closed and event.type == pygame.MOUSEBUTTONDOWN:
+            is_human_turn = (
+                game_state.players[game_state.current_turn] == PlayerType.HUMAN
+            )
+            if all_dialogs_closed and is_human_turn and event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:  # Left click
                     clicked_square = pixel_to_square(*event.pos, board_renderer.rotated)
 
@@ -234,6 +289,38 @@ def main():
                             selected_square = None
                             valid_moves = []
 
+        # Handle AI turn
+        is_ai_turn = (
+            game_state.players[game_state.current_turn] == PlayerType.AI
+            and ai_player is not None
+            and promotion_dialog is None
+        )
+
+        # Start AI thinking if it's AI's turn and not already thinking
+        if is_ai_turn and ai_future is None:
+            ai_thinking_for_fen = FENGenerator.generate(board, game_state)
+            ai_future = executor.submit(ai_player.get_move, ai_thinking_for_fen)
+
+        # Check if AI has finished thinking
+        if ai_future is not None and ai_future.done():
+            try:
+                from_sq, to_sq, promotion_piece = ai_future.result()
+                # Only apply move if board position hasn't changed
+                current_fen = FENGenerator.generate(board, game_state)
+                if current_fen == ai_thinking_for_fen:
+                    move_executor.execute_move(from_sq, to_sq, promotion_piece)
+                    selected_square = None
+                    valid_moves = []
+            except AIPlayerError as e:
+                if not ai_error_shown:
+                    show_error_dialog(
+                        ui_manager, (WINDOW_WIDTH, WINDOW_HEIGHT), f"AI error: {e}"
+                    )
+                    ai_error_shown = True
+            finally:
+                ai_future = None
+                ai_thinking_for_fen = None
+
         # Update UI
         ui_manager.update(time_delta)
         control_panel.update_button_states(game_state.can_undo(), game_state.can_redo())
@@ -264,6 +351,10 @@ def main():
 
         pygame.display.flip()
 
+    # Cleanup
+    executor.shutdown(wait=False)
+    if ai_player is not None:
+        ai_player.quit()
     pygame.quit()
 
 

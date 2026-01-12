@@ -7,6 +7,8 @@ from .constants import Color, PieceType
 from .pieces import King, Queen, Rook, Bishop, Knight, Pawn
 
 if TYPE_CHECKING:
+    from .board import Board
+    from .game_state import GameState
     from .piece import Piece
 
 
@@ -232,3 +234,116 @@ class FENParser:
             return value
         except ValueError:
             raise FENError(f"Invalid fullmove number: '{fullmove}'")
+
+
+class FENGenerator:
+    """Generates FEN strings from board and game state."""
+
+    PIECE_CHARS = {
+        (PieceType.KING, Color.WHITE): "K",
+        (PieceType.QUEEN, Color.WHITE): "Q",
+        (PieceType.ROOK, Color.WHITE): "R",
+        (PieceType.BISHOP, Color.WHITE): "B",
+        (PieceType.KNIGHT, Color.WHITE): "N",
+        (PieceType.PAWN, Color.WHITE): "P",
+        (PieceType.KING, Color.BLACK): "k",
+        (PieceType.QUEEN, Color.BLACK): "q",
+        (PieceType.ROOK, Color.BLACK): "r",
+        (PieceType.BISHOP, Color.BLACK): "b",
+        (PieceType.KNIGHT, Color.BLACK): "n",
+        (PieceType.PAWN, Color.BLACK): "p",
+    }
+
+    @classmethod
+    def generate(cls, board: Board, game_state: GameState) -> str:
+        """
+        Generate a FEN string from the current board and game state.
+
+        Args:
+            board: The current board position
+            game_state: The current game state
+
+        Returns:
+            A valid FEN string representing the position
+        """
+        parts = [
+            cls._generate_piece_placement(board),
+            cls._generate_active_color(game_state),
+            cls._generate_castling(game_state),
+            cls._generate_en_passant(game_state),
+            str(game_state.halfmove_clock),
+            str(game_state.fullmove_number),
+        ]
+        return " ".join(parts)
+
+    @classmethod
+    def _generate_piece_placement(cls, board: Board) -> str:
+        """Generate the piece placement field (field 1)."""
+        ranks = []
+        for rank in range(7, -1, -1):  # FEN starts from rank 8 (index 7)
+            rank_str = ""
+            empty_count = 0
+
+            for file in range(8):
+                piece = board.get_piece(file, rank)
+                if piece is None:
+                    empty_count += 1
+                else:
+                    if empty_count > 0:
+                        rank_str += str(empty_count)
+                        empty_count = 0
+                    rank_str += cls.PIECE_CHARS[(piece.piece_type, piece.color)]
+
+            if empty_count > 0:
+                rank_str += str(empty_count)
+
+            ranks.append(rank_str)
+
+        return "/".join(ranks)
+
+    @classmethod
+    def _generate_active_color(cls, game_state: GameState) -> str:
+        """Generate the active color field (field 2)."""
+        return "w" if game_state.current_turn == Color.WHITE else "b"
+
+    @classmethod
+    def _generate_castling(cls, game_state: GameState) -> str:
+        """Generate the castling availability field (field 3)."""
+        rights = game_state.castling_rights
+        castling = ""
+
+        if rights.white_kingside:
+            castling += "K"
+        if rights.white_queenside:
+            castling += "Q"
+        if rights.black_kingside:
+            castling += "k"
+        if rights.black_queenside:
+            castling += "q"
+
+        return castling if castling else "-"
+
+    @classmethod
+    def _generate_en_passant(cls, game_state: GameState) -> str:
+        """
+        Generate the en passant target square field (field 4).
+
+        Note: Our internal representation stores the pawn position,
+        but FEN expects the landing square.
+        """
+        target = game_state.current_en_passant_target
+        if target is None:
+            return "-"
+
+        file, pawn_rank = target
+        file_char = chr(ord("a") + file)
+
+        # Convert pawn position to landing square
+        # If black pawn on rank 4 (index 3), landing square is rank 3
+        # If white pawn on rank 5 (index 4), landing square is rank 6
+        if pawn_rank == 3:
+            rank_char = "3"
+        else:  # pawn_rank == 4
+            rank_char = "6"
+
+        return file_char + rank_char

@@ -13,3 +13,8 @@ class PieceType(Enum):
 class Color(Enum):
     WHITE = auto()
     BLACK = auto()
+
+
+class PlayerType(Enum):
+    HUMAN = auto()
+    AI = auto()
