@@ -213,9 +213,11 @@ class MoveGenerator:
 
         if (self._is_on_board(*two_moves_forward)):
             # Pawn has not moved from starting square - can move 2 spaces
+            # But only if both the intermediate and destination squares are empty
             if ((piece.color == Color.WHITE and rank == 1)
                     or (piece.color == Color.BLACK and rank == 6)):
-                if board.get_piece(*two_moves_forward) is None:
+                if (board.get_piece(*one_move_forward) is None
+                        and board.get_piece(*two_moves_forward) is None):
                     moves.append(two_moves_forward)
         
         for possible_diagonal in diagonal_moves:
