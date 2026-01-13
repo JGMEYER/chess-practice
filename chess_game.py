@@ -84,7 +84,7 @@ def main():
     board_renderer = BoardRenderer(piece_renderer)
     captured_renderer = CapturedPiecesRenderer(sprite_loader)
     move_list_renderer = MoveListRenderer()
-    opening_renderer = OpeningRenderer()
+    opening_renderer = OpeningRenderer(ui_manager)
 
     # Initialize UI components
     menu_bar = MenuBar(ui_manager, WINDOW_WIDTH)
@@ -267,7 +267,8 @@ def main():
             (WINDOW_WIDTH, MENU_BUTTON_HEIGHT),
         )
 
-        # Draw opening name if detected
+        # Draw opening name if detected (update handles tooltip hover)
+        opening_renderer.update()
         opening_renderer.draw(screen, game.current_opening)
 
         # Draw move list (current position is last move index, or -1 if at start)

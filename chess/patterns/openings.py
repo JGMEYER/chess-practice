@@ -20,34 +20,15 @@ class OpeningsRepository:
     """In-memory repository for chess openings."""
 
     def __init__(self) -> None:
-        self._by_side: dict[Color, dict[str, Opening]] = {
-            Color.WHITE: {},
-            Color.BLACK: {},
-        }
+        # Key by move sequence - side in CSV indicates theoretical "owner" of the
+        # opening (e.g., Sicilian = Black's system), not whose turn it is
+        self._by_moves: dict[str, Opening] = {}
 
     def add(self, opening: Opening) -> None:
-        self._by_side[opening.side][opening.moves] = opening
+        self._by_moves[opening.moves] = opening
 
     def find_by_moves(self, moves: str) -> Opening | None:
-        side = self._infer_side_from_moves(moves)
-        return self._by_side[side].get(moves)
-
-    def _infer_side_from_moves(self, moves: str) -> Color:
-        """Infer which side the opening is for based on the last move notation.
-
-        In PGN, move numbers only appear before White's moves:
-        - "1.e4" = White's move (contains dot)
-        - "e5" = Black's move (no dot, follows White)
-        - "2...Nf6" = Black's move (explicit black notation)
-        """
-        last_token = moves.split()[-1]
-        # White moves have format "N.move" (e.g., "1.e4", "2.Nf3")
-        # Black moves are either plain (e.g., "e5") or explicit (e.g., "2...Nf6")
-        if "..." in last_token:
-            return Color.BLACK
-        if "." in last_token:
-            return Color.WHITE
-        return Color.BLACK
+        return self._by_moves.get(moves)
 
     @classmethod
     def from_csv(cls, path: Path) -> OpeningsRepository:

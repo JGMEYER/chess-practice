@@ -54,6 +54,8 @@ CAPTURED_GROUP_GAP = 7  # Base separation between different piece types
 
 # Opening name display
 OPENING_NAME_Y = SIDEBAR_Y + 55  # Below control buttons
+OPENING_NAME_X = SIDEBAR_X + 10  # Left margin in sidebar
+OPENING_NAME_MAX_WIDTH = SIDEBAR_WIDTH - 20  # 10px margin on each side
 
 # Move list display
 MOVE_LIST_TOP_Y = SIDEBAR_Y + 70  # Below opening name
