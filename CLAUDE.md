@@ -18,3 +18,10 @@ This project uses Poetry. Always use `poetry add <package>` for new dependencies
 - `graphics/` - Pygame rendering and UI components
 - `assets/sprites/` - Chess piece SVG sprites
 - `tests/` - Pytest test suite
+
+## Workflow
+Be sure at the end of building every feature that:
+- All previous tests are passing
+- There are unit tests covering the new behaviors
+- The README.md is up-to-date
+- The ROADMAP.md is up-to-date (check off any features we completed)
