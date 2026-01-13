@@ -19,6 +19,8 @@ from .constants import (
     VALID_MOVE_DOT,
     LAST_MOVE_LIGHT,
     LAST_MOVE_DARK,
+    CHECK_LIGHT,
+    CHECK_DARK,
 )
 
 
@@ -70,6 +72,7 @@ class BoardRenderer:
         surface: pygame.Surface,
         selected_square: tuple[int, int] | None = None,
         last_move_squares: tuple[tuple[int, int], tuple[int, int]] | None = None,
+        check_square: tuple[int, int] | None = None,
     ) -> None:
         """
         Draw the chess board squares.
@@ -78,15 +81,18 @@ class BoardRenderer:
             surface: The pygame surface to draw on
             selected_square: Optional (file, rank) of selected square to highlight
             last_move_squares: Optional (from_square, to_square) of last move to highlight
+            check_square: Optional (file, rank) of king in check to highlight red
         """
         for file in range(BOARD_SIZE):
             for rank in range(BOARD_SIZE):
                 is_light = (file + rank) % 2 == 1
                 square = (file, rank)
 
-                # Determine square color (selection takes priority over last move)
+                # Determine square color (priority: selection > check > last move > default)
                 if selected_square and square == selected_square:
                     color = SELECTED_SQUARE
+                elif check_square and square == check_square:
+                    color = CHECK_LIGHT if is_light else CHECK_DARK
                 elif last_move_squares and square in last_move_squares:
                     color = LAST_MOVE_LIGHT if is_light else LAST_MOVE_DARK
                 elif is_light:
@@ -162,6 +168,7 @@ class BoardRenderer:
         selected_square: tuple[int, int] | None = None,
         valid_moves: list[tuple[int, int]] | None = None,
         last_move_squares: tuple[tuple[int, int], tuple[int, int]] | None = None,
+        check_square: tuple[int, int] | None = None,
     ) -> None:
         """
         Draw the complete board with labels and highlights.
@@ -172,9 +179,10 @@ class BoardRenderer:
             selected_square: Optional (file, rank) of selected square
             valid_moves: Optional list of valid move squares to highlight
             last_move_squares: Optional (from_square, to_square) of last move to highlight
+            check_square: Optional (file, rank) of king in check to highlight red
         """
         surface.fill(BACKGROUND)
-        self.draw_board(surface, selected_square, last_move_squares)
+        self.draw_board(surface, selected_square, last_move_squares, check_square)
         self.draw_labels(surface)
         self._piece_renderer.draw_pieces(surface, board, self._rotated)
         if valid_moves:

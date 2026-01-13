@@ -503,3 +503,27 @@ class MoveGenerator:
                     all_moves[piece] = moves
 
         return all_moves
+
+    def has_legal_moves(
+        self, board: Board, color: Color, game_state: GameState
+    ) -> bool:
+        """
+        Check if the given color has any legal moves.
+
+        More efficient than get_all_legal_moves when you only need to know
+        if moves exist (returns early on first legal move found).
+
+        Args:
+            board: The current board state
+            color: The color to check
+            game_state: The current game state
+
+        Returns:
+            True if at least one legal move exists
+        """
+        for file, rank, piece in board:
+            if piece is not None and piece.color == color:
+                moves = self.get_legal_moves(board, piece, game_state)
+                if moves:
+                    return True
+        return False

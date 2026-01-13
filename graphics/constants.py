@@ -15,6 +15,10 @@ VALID_MOVE_DOT = (128, 128, 128, 128)  # Semi-transparent gray dot
 LAST_MOVE_LIGHT = (205, 210, 184)  # Light square with subtle blue-green tint
 LAST_MOVE_DARK = (148, 157, 132)  # Dark square with subtle blue-green tint
 
+# Check/checkmate highlight colors (red tint for king in danger)
+CHECK_LIGHT = (235, 160, 140)  # Light square with red tint
+CHECK_DARK = (200, 120, 100)  # Dark square with red tint
+
 # Board dimensions
 SQUARE_SIZE = 80
 BOARD_SIZE = 8

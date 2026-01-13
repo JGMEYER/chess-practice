@@ -435,3 +435,52 @@ class TestGetAllMoves:
 
         assert white_knight in white_moves
         assert black_knight not in white_moves
+
+
+class TestHasLegalMoves:
+    """Tests for has_legal_moves method."""
+
+    def test_has_legal_moves_true_when_moves_exist(self, move_gen, empty_board, game_state):
+        """has_legal_moves returns True when piece can move."""
+        from chess.pieces import King
+        king = King(Color.WHITE)
+        empty_board.set_piece(4, 4, king)
+
+        assert move_gen.has_legal_moves(empty_board, Color.WHITE, game_state) is True
+
+    def test_has_legal_moves_false_in_checkmate(self, move_gen, empty_board, game_state):
+        """has_legal_moves returns False in checkmate position."""
+        from chess.pieces import King, Pawn
+        # Classic back-rank mate: King on g1, own pawns on f2, g2, h2 block escape
+        # Enemy rook on a1 gives check along first rank
+        white_king = King(Color.WHITE)
+        white_pawn_f = Pawn(Color.WHITE)
+        white_pawn_g = Pawn(Color.WHITE)
+        white_pawn_h = Pawn(Color.WHITE)
+        black_rook = Rook(Color.BLACK)
+
+        empty_board.set_piece(6, 0, white_king)  # g1
+        empty_board.set_piece(5, 1, white_pawn_f)  # f2
+        empty_board.set_piece(6, 1, white_pawn_g)  # g2
+        empty_board.set_piece(7, 1, white_pawn_h)  # h2
+        empty_board.set_piece(0, 0, black_rook)  # a1 - gives check
+
+        # Confirm it's checkmate: king is in check and no legal moves
+        assert move_gen.is_in_check(empty_board, Color.WHITE) is True
+        assert move_gen.has_legal_moves(empty_board, Color.WHITE, game_state) is False
+
+    def test_has_legal_moves_false_in_stalemate(self, move_gen, empty_board, game_state):
+        """has_legal_moves returns False in stalemate position."""
+        from chess.pieces import King, Queen
+        # Stalemate: King on a1, enemy queen on b3 (covers a2, b1, b2)
+        white_king = King(Color.WHITE)
+        black_queen = Queen(Color.BLACK)
+        black_king = King(Color.BLACK)
+
+        empty_board.set_piece(0, 0, white_king)  # a1
+        empty_board.set_piece(1, 2, black_queen)  # b3
+        empty_board.set_piece(2, 1, black_king)  # c2 - covers b1, c1
+
+        assert move_gen.has_legal_moves(empty_board, Color.WHITE, game_state) is False
+        # Confirm it's not check (which would make it checkmate, not stalemate)
+        assert move_gen.is_in_check(empty_board, Color.WHITE) is False

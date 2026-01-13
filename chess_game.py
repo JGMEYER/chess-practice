@@ -255,7 +255,12 @@ def main():
 
         # Draw
         board_renderer.draw(
-            screen, game.board, game.selected_square, game.valid_moves, last_move_squares
+            screen,
+            game.board,
+            game.selected_square,
+            game.valid_moves,
+            last_move_squares,
+            game.check_square,
         )
 
         # Draw sidebar

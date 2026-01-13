@@ -105,6 +105,48 @@ class GameController:
         """Check if we're at the latest position (no redo available)."""
         return not self.game_state.can_redo()
 
+    @property
+    def is_in_check(self) -> bool:
+        """Check if the current player's king is in check."""
+        return self.move_generator.is_in_check(
+            self.board, self.game_state.current_turn
+        )
+
+    @property
+    def is_checkmate(self) -> bool:
+        """Check if the current player is in checkmate."""
+        if not self.is_in_check:
+            return False
+        return not self.move_generator.has_legal_moves(
+            self.board, self.game_state.current_turn, self.game_state
+        )
+
+    @property
+    def is_stalemate(self) -> bool:
+        """Check if the current player is in stalemate."""
+        if self.is_in_check:
+            return False
+        return not self.move_generator.has_legal_moves(
+            self.board, self.game_state.current_turn, self.game_state
+        )
+
+    @property
+    def check_square(self) -> tuple[int, int] | None:
+        """Get the square of the king in check, or None if not in check."""
+        if not self.is_in_check:
+            return None
+
+        # Find the current player's king
+        from chess import PieceType
+        for file, rank, piece in self.board:
+            if (
+                piece is not None
+                and piece.color == self.game_state.current_turn
+                and piece.piece_type == PieceType.KING
+            ):
+                return (file, rank)
+        return None
+
     def clear_selection(self) -> None:
         """Clear the current piece selection."""
         self.selected_square = None
