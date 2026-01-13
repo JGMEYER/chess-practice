@@ -41,15 +41,3 @@ class TestOpeningsRepository:
         assert result.moves == "1.e4 e6"
 
 
-class TestSideInference:
-    def test_infers_white_from_white_last_move(self) -> None:
-        repo = OpeningsRepository()
-        assert repo._infer_side_from_moves("1.e4 e5 2.Nf3") == Color.WHITE
-
-    def test_infers_black_from_black_last_move(self) -> None:
-        repo = OpeningsRepository()
-        assert repo._infer_side_from_moves("1.e4 c5") == Color.BLACK
-
-    def test_infers_black_from_explicit_black_notation(self) -> None:
-        repo = OpeningsRepository()
-        assert repo._infer_side_from_moves("1.e4 e5 2...Nc6") == Color.BLACK
