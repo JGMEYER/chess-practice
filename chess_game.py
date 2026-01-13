@@ -3,6 +3,7 @@ import pygame_gui
 
 from game_controller import GameController
 from chess import AIPlayerError, PGNError
+from chess.clipboard import copy_to_clipboard
 from graphics import (
     BoardRenderer,
     PieceRenderer,
@@ -118,6 +119,10 @@ def main():
                 fen_dialog = FENDialog(ui_manager, (WINDOW_WIDTH, WINDOW_HEIGHT))
             elif action == "load_pgn":
                 pgn_dialog = PGNDialog(ui_manager, (WINDOW_WIDTH, WINDOW_HEIGHT))
+            elif action == "copy_fen":
+                copy_to_clipboard(game.get_fen())
+            elif action == "copy_pgn":
+                copy_to_clipboard(game.get_pgn())
             elif action == "show_credits":
                 credits_dialog = CreditsDialog(ui_manager, (WINDOW_WIDTH, WINDOW_HEIGHT))
 

@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor, Future
+from datetime import date
 from typing import TYPE_CHECKING
 
 from chess import (
     Board,
+    Color,
     MoveGenerator,
     MoveExecutor,
     FENLoader,
@@ -146,6 +148,44 @@ class GameController:
             ):
                 return (file, rank)
         return None
+
+    def get_pgn(self) -> str:
+        """Generate PGN string for the current game."""
+        # Generate movetext from SAN history
+        movetext = PGNParser.to_movetext(self.san_history)
+
+        # Determine result
+        if self.is_checkmate:
+            # Current player is checkmated, so opponent won
+            result = "0-1" if self.game_state.current_turn == Color.WHITE else "1-0"
+        elif self.is_stalemate:
+            result = "1/2-1/2"
+        else:
+            result = "*"  # Game in progress
+
+        # Determine player names based on configuration
+        def player_name(color: Color) -> str:
+            if self.game_state.players[color] == PlayerType.AI:
+                return "Stockfish"
+            return "Human"
+
+        # Build PGN with standard tags
+        lines = [
+            '[Event "Chess Practice Game"]',
+            '[Site "Local"]',
+            f'[Date "{date.today().strftime("%Y.%m.%d")}"]',
+            '[Round "?"]',
+            f'[White "{player_name(Color.WHITE)}"]',
+            f'[Black "{player_name(Color.BLACK)}"]',
+            f'[Result "{result}"]',
+            "",
+            f"{movetext} {result}",
+        ]
+        return "\n".join(lines)
+
+    def get_fen(self) -> str:
+        """Generate FEN string for the current position."""
+        return FENGenerator.generate(self.board, self.game_state)
 
     def clear_selection(self) -> None:
         """Clear the current piece selection."""
