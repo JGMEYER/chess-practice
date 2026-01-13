@@ -55,6 +55,9 @@ class GameController:
         self._openings_repo = load_openings()
         self.current_opening: Opening | None = None
 
+        # Global AI mode toggle
+        self._ai_mode_enabled: bool = True
+
         self._init_ai()
         self.fen_loader.load_starting_position()
 
@@ -71,9 +74,31 @@ class GameController:
         return self._ai_future is not None
 
     @property
+    def ai_mode_enabled(self) -> bool:
+        """Check if AI mode is globally enabled."""
+        return self._ai_mode_enabled and self._ai_player is not None
+
+    @property
+    def ai_available(self) -> bool:
+        """Check if AI (Stockfish) is available."""
+        return self._ai_player is not None
+
+    @property
     def is_human_turn(self) -> bool:
         """Check if it's a human player's turn."""
+        if not self._ai_mode_enabled:
+            return True  # All players are human when AI mode is off
         return self.game_state.players[self.game_state.current_turn] == PlayerType.HUMAN
+
+    def toggle_ai_mode(self) -> bool:
+        """Toggle global AI mode on/off. Returns new state."""
+        if self._ai_player is None:
+            return False  # Stockfish not available
+
+        self._cancel_ai_thinking()
+        self._ai_mode_enabled = not self._ai_mode_enabled
+        self.clear_selection()
+        return self._ai_mode_enabled
 
     @property
     def is_at_end_of_history(self) -> bool:

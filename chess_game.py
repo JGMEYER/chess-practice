@@ -190,6 +190,8 @@ def main():
                 elif control_action == "rotate":
                     board_renderer.toggle_rotation()
                     game.clear_selection()
+                elif control_action == "toggle_ai":
+                    game.toggle_ai_mode()
 
             # Handle board clicks
             all_dialogs_closed = (
@@ -243,6 +245,7 @@ def main():
         control_panel.update_button_states(
             game.game_state.can_undo(), game.game_state.can_redo()
         )
+        control_panel.update_ai_button_state(game.ai_mode_enabled, game.ai_available)
 
         # Get last move squares for highlighting
         last_move = game.game_state.last_move
