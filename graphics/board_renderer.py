@@ -21,6 +21,8 @@ from .constants import (
     LAST_MOVE_DARK,
     CHECK_LIGHT,
     CHECK_DARK,
+    CHECKMATE_LIGHT,
+    CHECKMATE_DARK,
 )
 
 
@@ -73,6 +75,7 @@ class BoardRenderer:
         selected_square: tuple[int, int] | None = None,
         last_move_squares: tuple[tuple[int, int], tuple[int, int]] | None = None,
         check_square: tuple[int, int] | None = None,
+        is_checkmate: bool = False,
     ) -> None:
         """
         Draw the chess board squares.
@@ -81,18 +84,22 @@ class BoardRenderer:
             surface: The pygame surface to draw on
             selected_square: Optional (file, rank) of selected square to highlight
             last_move_squares: Optional (from_square, to_square) of last move to highlight
-            check_square: Optional (file, rank) of king in check to highlight red
+            check_square: Optional (file, rank) of king in check to highlight
+            is_checkmate: Whether the game is in checkmate (uses red instead of amber)
         """
         for file in range(BOARD_SIZE):
             for rank in range(BOARD_SIZE):
                 is_light = (file + rank) % 2 == 1
                 square = (file, rank)
 
-                # Determine square color (priority: selection > check > last move > default)
+                # Determine square color (priority: selection > check/checkmate > last move > default)
                 if selected_square and square == selected_square:
                     color = SELECTED_SQUARE
                 elif check_square and square == check_square:
-                    color = CHECK_LIGHT if is_light else CHECK_DARK
+                    if is_checkmate:
+                        color = CHECKMATE_LIGHT if is_light else CHECKMATE_DARK
+                    else:
+                        color = CHECK_LIGHT if is_light else CHECK_DARK
                 elif last_move_squares and square in last_move_squares:
                     color = LAST_MOVE_LIGHT if is_light else LAST_MOVE_DARK
                 elif is_light:
@@ -169,6 +176,7 @@ class BoardRenderer:
         valid_moves: list[tuple[int, int]] | None = None,
         last_move_squares: tuple[tuple[int, int], tuple[int, int]] | None = None,
         check_square: tuple[int, int] | None = None,
+        is_checkmate: bool = False,
     ) -> None:
         """
         Draw the complete board with labels and highlights.
@@ -179,10 +187,11 @@ class BoardRenderer:
             selected_square: Optional (file, rank) of selected square
             valid_moves: Optional list of valid move squares to highlight
             last_move_squares: Optional (from_square, to_square) of last move to highlight
-            check_square: Optional (file, rank) of king in check to highlight red
+            check_square: Optional (file, rank) of king in check to highlight
+            is_checkmate: Whether the game is in checkmate (uses red instead of amber)
         """
         surface.fill(BACKGROUND)
-        self.draw_board(surface, selected_square, last_move_squares, check_square)
+        self.draw_board(surface, selected_square, last_move_squares, check_square, is_checkmate)
         self.draw_labels(surface)
         self._piece_renderer.draw_pieces(surface, board, self._rotated)
         if valid_moves:

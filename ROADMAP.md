@@ -6,9 +6,10 @@
 - [x] Flip board
 - [x] Pawn promotion
 - [x] AI move integration
+- [x] Export PGN
+- [x] Export FEN
+- [ ] Refactor, move UI constants into ui/constants.py
 - [ ] AI chat / analysis
 - [ ] AI analysis bar
 - [ ] UI lines to denote scrollable
-- [ ] Special checkmate state
-- [ ] Export PGN
-- [ ] Export FEN
+- [x] Special checkmate state

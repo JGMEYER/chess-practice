@@ -25,7 +25,10 @@ class PieceRenderer:
         self._sprite_loader = sprite_loader
 
     def draw_pieces(
-        self, surface: pygame.Surface, board: Board, flipped: bool = False
+        self,
+        surface: pygame.Surface,
+        board: Board,
+        flipped: bool = False,
     ) -> None:
         """
         Draw all pieces on the board.
@@ -36,15 +39,17 @@ class PieceRenderer:
             flipped: Whether the board is flipped (black at bottom)
         """
         for file, rank, piece in board:
-            if piece is not None:
-                sprite = self._sprite_loader.get_sprite(piece.color, piece.piece_type)
+            if piece is None:
+                continue
 
-                # Calculate pixel position
-                if flipped:
-                    x = BOARD_OFFSET_X + (BOARD_SIZE - 1 - file) * SQUARE_SIZE
-                    y = BOARD_OFFSET_Y + rank * SQUARE_SIZE
-                else:
-                    x = BOARD_OFFSET_X + file * SQUARE_SIZE
-                    y = BOARD_OFFSET_Y + (BOARD_SIZE - 1 - rank) * SQUARE_SIZE
+            sprite = self._sprite_loader.get_sprite(piece.color, piece.piece_type)
 
-                surface.blit(sprite, (x, y))
+            # Calculate pixel position
+            if flipped:
+                x = BOARD_OFFSET_X + (BOARD_SIZE - 1 - file) * SQUARE_SIZE
+                y = BOARD_OFFSET_Y + rank * SQUARE_SIZE
+            else:
+                x = BOARD_OFFSET_X + file * SQUARE_SIZE
+                y = BOARD_OFFSET_Y + (BOARD_SIZE - 1 - rank) * SQUARE_SIZE
+
+            surface.blit(sprite, (x, y))

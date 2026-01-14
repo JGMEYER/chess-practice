@@ -15,9 +15,13 @@ VALID_MOVE_DOT = (128, 128, 128, 128)  # Semi-transparent gray dot
 LAST_MOVE_LIGHT = (205, 210, 184)  # Light square with subtle blue-green tint
 LAST_MOVE_DARK = (148, 157, 132)  # Dark square with subtle blue-green tint
 
-# Check/checkmate highlight colors (red tint for king in danger)
-CHECK_LIGHT = (235, 160, 140)  # Light square with red tint
-CHECK_DARK = (200, 120, 100)  # Dark square with red tint
+# Check highlight colors (orange/amber tint for king in check, not checkmate)
+CHECK_LIGHT = (240, 200, 150)  # Light square with amber tint
+CHECK_DARK = (210, 160, 100)  # Dark square with amber tint
+
+# Checkmate highlight colors (red tint for defeated king)
+CHECKMATE_LIGHT = (235, 160, 140)  # Light square with red tint
+CHECKMATE_DARK = (200, 120, 100)  # Dark square with red tint
 
 # Board dimensions
 SQUARE_SIZE = 80

@@ -266,6 +266,7 @@ def main():
             game.valid_moves,
             last_move_squares,
             game.check_square,
+            game.is_checkmate,
         )
 
         # Draw sidebar
