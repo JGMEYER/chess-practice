@@ -337,6 +337,14 @@ class GameController:
         self.clear_selection()
         self._cancel_ai_thinking()
 
+    def reset(self) -> None:
+        """Reset the game to the starting position."""
+        self.fen_loader.load_starting_position()
+        self.san_history.clear()
+        self.current_opening = None
+        self.clear_selection()
+        self._cancel_ai_thinking()
+
     def load_fen(self, fen_string: str) -> None:
         """
         Load a position from a FEN string.

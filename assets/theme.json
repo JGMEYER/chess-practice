@@ -35,20 +35,7 @@
             "hovered_text": "#FFFFFF"
         }
     },
-    "#file_menu_button": {
-        "misc": {
-            "border_width": "0",
-            "shadow_width": "0"
-        },
-        "colours": {
-            "normal_bg": "#302E2B",
-            "hovered_bg": "#4A4845",
-            "active_bg": "#25292e",
-            "normal_text": "#FFFFFF",
-            "hovered_text": "#FFFFFF"
-        }
-    },
-    "#help_menu_button": {
+    "#menu_button": {
         "misc": {
             "border_width": "0",
             "shadow_width": "0"

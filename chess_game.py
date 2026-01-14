@@ -123,6 +123,9 @@ def main():
                 copy_to_clipboard(game.get_fen())
             elif action == "copy_pgn":
                 copy_to_clipboard(game.get_pgn())
+            elif action == "reset_game":
+                game.reset()
+                move_list_renderer.reset_scroll()
             elif action == "show_credits":
                 credits_dialog = CreditsDialog(ui_manager, (WINDOW_WIDTH, WINDOW_HEIGHT))
 
