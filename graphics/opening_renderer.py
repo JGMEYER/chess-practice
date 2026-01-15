@@ -108,28 +108,32 @@ class OpeningRenderer:
             self._tooltip.kill()
             self._tooltip = None
 
-    def draw(self, surface: pygame.Surface, opening: Opening | None) -> None:
+    def draw(
+        self, surface: pygame.Surface, opening: Opening | None
+    ) -> None:
         """
         Draw the opening name if one is detected.
 
         Args:
             surface: Pygame surface to draw on
-            opening: The current opening, or None if no match
+            opening: Opening object or None if no match
         """
+        # Format the full name
+        full_name = opening.display_name if opening is not None else None
+
         # Track opening changes to clear tooltip when opening changes
-        new_name = opening.name if opening else None
-        if new_name != self._current_opening_name:
-            self._current_opening_name = new_name
+        if full_name != self._current_opening_name:
+            self._current_opening_name = full_name
             if self._tooltip is not None:
                 self._tooltip.kill()
                 self._tooltip = None
 
-        if opening is None:
+        if full_name is None:
             self._is_truncated = False
             self._text_rect = None
             return
 
-        display_text, self._is_truncated = self._truncate_text(opening.name)
+        display_text, self._is_truncated = self._truncate_text(full_name)
         text_surface = self._font.render(display_text, True, (140, 140, 140))
 
         # Store text rect for hover detection

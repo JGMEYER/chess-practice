@@ -13,3 +13,5 @@
 - [ ] AI analysis bar
 - [ ] UI lines to denote scrollable
 - [x] Special checkmate state
+- [x] Opening trie structure (with opening_name + variation_name)
+- [x] Fix opening data conflicts (early moves mapped to wrong openings)

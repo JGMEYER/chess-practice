@@ -1,5 +1,6 @@
-name,type,side,eco_code,moves
-Albin Countergambit Lasker Trap,Opening,Black,D08,1.d4 d5 2.c4 e5 3.dxe5 d4 4.e3 Bb4+ 5.Bd2 dxe3
-Italian Game,Opening,White,C50,1.e4 e5 2.Nf3 Nc6 3.Bc4
-Sicilian Defense,Opening,Black,B20,1.e4 c5
-French Defense,Opening,Black,C00,1.e4 e6
+opening_name,variation_name,type,side,eco_code,moves
+Albin Countergambit,Lasker Trap,Opening,Black,D08,1.d4 d5 2.c4 e5 3.dxe5 d4 4.e3 Bb4+ 5.Bd2 dxe3
+Italian Game,,Opening,White,C50,1.e4 e5 2.Nf3 Nc6 3.Bc4
+Sicilian Defense,,Opening,Black,B20,1.e4 c5
+French Defense,,Opening,Black,C00,1.e4 e6
+Sicilian Defense,Dragon Variation,Opening,Black,B70,1.e4 c5 2.Nf3 d6 3.d4 cxd4 4.Nxd4 Nf6 5.Nc3 g6

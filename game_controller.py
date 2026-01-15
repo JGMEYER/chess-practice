@@ -54,7 +54,7 @@ class GameController:
         self._ai_thinking_for_fen: str | None = None
 
         # Opening detection
-        self._openings_repo = load_openings()
+        self._opening_trie = load_openings()
         self.current_opening: Opening | None = None
 
         # Global AI mode toggle
@@ -394,8 +394,7 @@ class GameController:
 
         if current_move_count > 0:
             current_moves = self.san_history[:current_move_count]
-            movetext = PGNParser.to_movetext(current_moves)
-            self.current_opening = self._openings_repo.find_by_moves(movetext)
+            self.current_opening = self._opening_trie.lookup(current_moves)
         else:
             self.current_opening = None
 
