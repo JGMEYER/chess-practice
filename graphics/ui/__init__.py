@@ -4,6 +4,7 @@ from .credits_dialog import CreditsDialog
 from .control_panel import ControlPanel
 from .promotion_dialog import PromotionDialog
 from .pgn_dialog import PGNDialog
+from .side_panel import SidePanel
 
 __all__ = [
     "MenuBar",
@@ -13,4 +14,5 @@ __all__ = [
     "ControlPanel",
     "PromotionDialog",
     "PGNDialog",
+    "SidePanel",
 ]

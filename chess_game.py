@@ -21,6 +21,7 @@ from graphics.ui import (
     ControlPanel,
     PromotionDialog,
     PGNDialog,
+    SidePanel,
 )
 from graphics.constants import (
     BOARD_PIXEL_SIZE,
@@ -90,6 +91,7 @@ def main():
     # Initialize UI components
     menu_bar = MenuBar(ui_manager, WINDOW_WIDTH)
     control_panel = ControlPanel(ui_manager, icon_loader)
+    side_panel = SidePanel()
 
     # Dialog state
     fen_dialog: FENDialog | None = None
@@ -235,6 +237,17 @@ def main():
                 else:
                     game.clear_selection()
 
+            # Handle side panel tab click
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if side_panel.handle_click(event.pos):
+                    screen = pygame.display.set_mode(
+                        (side_panel.get_window_width(), WINDOW_HEIGHT)
+                    )
+
+            # Handle mouse motion for side panel hover
+            if event.type == pygame.MOUSEMOTION:
+                side_panel.update_hover(event.pos)
+
             # Handle mouse wheel for move list scrolling
             if event.type == pygame.MOUSEWHEEL and all_dialogs_closed:
                 # Check if mouse is over the sidebar area
@@ -304,6 +317,7 @@ def main():
 
         ui_manager.draw_ui(screen)
         control_panel.draw(screen)
+        side_panel.draw(screen)
 
         if promotion_dialog is not None:
             promotion_dialog.draw_pieces(screen)
