@@ -36,9 +36,9 @@ class SidePanel:
     TAB_HOVER_COLOR = (74, 72, 69)  # Slightly lighter on hover
     TAB_ARROW_COLOR = (180, 180, 180)  # Light gray arrow
 
-    def __init__(self, content: PanelContent | None = None):
-        """Initialize the side panel in collapsed state."""
-        self._expanded = False
+    def __init__(self, content: PanelContent | None = None, expanded: bool = True):
+        """Initialize the side panel."""
+        self._expanded = expanded
         self._tab_hovered = False
         self._content = content
 
@@ -90,18 +90,22 @@ class SidePanel:
         """
         tab_rect = self._get_tab_rect()
         if tab_rect.collidepoint(pos):
-            self._expanded = not self._expanded
-            # Note: content visibility is set by notify_content_visibility()
-            # after window resolution is updated
+            self.set_expanded(not self._expanded)
             return True
         return False
 
-    def notify_content_visibility(self) -> None:
-        """Notify content of current visibility state.
-
-        Call this AFTER updating window resolution to ensure UI elements
-        are created within the valid display area.
+    def set_expanded(self, expanded: bool) -> None:
         """
+        Set the panel's expanded state.
+
+        This updates the internal state and notifies content of visibility change.
+        The caller is responsible for updating window resolution using get_window_width().
+        """
+        self._expanded = expanded
+        self._notify_content_visibility()
+
+    def _notify_content_visibility(self) -> None:
+        """Notify content of current visibility state."""
         if self._content is not None:
             panel_rect = self._get_panel_rect()
             self._content.set_visible(self._expanded, panel_rect)

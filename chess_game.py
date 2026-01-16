@@ -93,7 +93,12 @@ def main():
     menu_bar = MenuBar(ui_manager, WINDOW_WIDTH)
     control_panel = ControlPanel(ui_manager, icon_loader)
     trie_panel = TriePanel(ui_manager)
-    side_panel = SidePanel(content=trie_panel)
+    side_panel = SidePanel(content=trie_panel, expanded=False)
+
+    # Expand side panel by default
+    side_panel.set_expanded(True)
+    screen = pygame.display.set_mode((side_panel.get_window_width(), WINDOW_HEIGHT))
+    ui_manager.set_window_resolution((side_panel.get_window_width(), WINDOW_HEIGHT))
 
     # Dialog state
     fen_dialog: FENDialog | None = None
@@ -251,9 +256,6 @@ def main():
                     ui_manager.set_window_resolution(
                         (side_panel.get_window_width(), WINDOW_HEIGHT)
                     )
-                    # Notify content AFTER resolution is updated so UI elements
-                    # are created within the valid display area
-                    side_panel.notify_content_visibility()
 
             # Handle side panel events (trie visualization interactions)
             trie_action = side_panel.process_event(event)
