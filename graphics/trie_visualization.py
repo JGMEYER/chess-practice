@@ -12,8 +12,8 @@ if TYPE_CHECKING:
 
 
 # Layout constants
-HORIZONTAL_SPACING = 140
-VERTICAL_SPACING = 60  # Increased from 50 for better spacing in focus mode
+HORIZONTAL_SPACING = 60
+VERTICAL_SPACING = 140
 NODE_RADIUS = 18
 PAN_SPEED_MULTIPLIER = 2.5  # Makes panning feel more responsive
 
@@ -129,24 +129,24 @@ class TrieLayout:
         return (self._min_x, self._min_y, self._max_x, self._max_y)
 
     def compute_layout(self, trie_root: TrieNode) -> TrieLayoutNode:
-        """Compute 2D layout for the entire trie (left-to-right orientation)."""
+        """Compute 2D layout for the entire trie (bottom-to-top orientation)."""
         self._all_nodes = []
 
         # Phase 1: Create layout tree structure
         self._root = self._create_layout_tree(trie_root, depth=0, parent=None)
 
-        # Phase 2: Assign Y positions using layered algorithm (siblings spread vertically)
-        next_y_at_depth: dict[int, float] = {}
-        self._assign_y_positions_spread(self._root, next_y_at_depth)
+        # Phase 2: Assign X positions using layered algorithm (siblings spread horizontally)
+        next_x_at_depth: dict[int, float] = {}
+        self._assign_x_positions_spread(self._root, next_x_at_depth)
 
         # Phase 3: Center parents over children (post-order)
-        self._center_parents_vertical(self._root)
+        self._center_parents_horizontal(self._root)
 
         # Phase 4: Resolve any overlaps
-        self._resolve_overlaps_vertical()
+        self._resolve_overlaps_horizontal()
 
-        # Phase 5: Assign X based on depth (horizontal traversal: left = root)
-        self._assign_x_positions_by_depth(self._root)
+        # Phase 5: Assign Y based on depth (vertical traversal: top = root)
+        self._assign_y_positions_by_depth(self._root)
 
         # Phase 6: Normalize and compute bounds
         self._normalize_positions()
@@ -214,40 +214,40 @@ class TrieLayout:
                 return san
         return None
 
-    def _assign_y_positions_spread(
-        self, node: TrieLayoutNode, next_y: dict[int, float]
+    def _assign_x_positions_spread(
+        self, node: TrieLayoutNode, next_x: dict[int, float]
     ) -> None:
-        """Assign initial Y positions (post-order traversal) - siblings spread vertically."""
+        """Assign initial X positions (post-order traversal) - siblings spread horizontally."""
         # First, process all children
         for child in node.children:
-            self._assign_y_positions_spread(child, next_y)
+            self._assign_x_positions_spread(child, next_x)
 
         if node.children:
-            # Parent: center over children (vertically)
-            top_child = node.children[0]
-            bottom_child = node.children[-1]
-            node.y = (top_child.y + bottom_child.y) / 2
+            # Parent: center over children (horizontally)
+            left_child = node.children[0]
+            right_child = node.children[-1]
+            node.x = (left_child.x + right_child.x) / 2
         else:
             # Leaf: use next available position at this depth
-            node.y = next_y.get(node.depth, 0.0)
+            node.x = next_x.get(node.depth, 0.0)
 
-        # Update next available Y for this depth
-        next_y[node.depth] = max(
-            next_y.get(node.depth, 0.0), node.y + VERTICAL_SPACING
+        # Update next available X for this depth
+        next_x[node.depth] = max(
+            next_x.get(node.depth, 0.0), node.x + HORIZONTAL_SPACING
         )
 
-    def _center_parents_vertical(self, node: TrieLayoutNode) -> None:
-        """Center parents over their children vertically (post-order)."""
+    def _center_parents_horizontal(self, node: TrieLayoutNode) -> None:
+        """Center parents over their children horizontally (post-order)."""
         for child in node.children:
-            self._center_parents_vertical(child)
+            self._center_parents_horizontal(child)
 
         if node.children:
-            top_child = node.children[0]
-            bottom_child = node.children[-1]
-            node.y = (top_child.y + bottom_child.y) / 2
+            left_child = node.children[0]
+            right_child = node.children[-1]
+            node.x = (left_child.x + right_child.x) / 2
 
-    def _resolve_overlaps_vertical(self) -> None:
-        """Resolve any node overlaps at the same depth (vertical spacing)."""
+    def _resolve_overlaps_horizontal(self) -> None:
+        """Resolve any node overlaps at the same depth (horizontal spacing)."""
         # Group nodes by depth
         by_depth: dict[int, list[TrieLayoutNode]] = {}
         for node in self._all_nodes:
@@ -255,29 +255,30 @@ class TrieLayout:
                 by_depth[node.depth] = []
             by_depth[node.depth].append(node)
 
-        # For each depth, sort by y and ensure minimum spacing
+        # For each depth, sort by x and ensure minimum spacing
         for depth in sorted(by_depth.keys()):
-            nodes = sorted(by_depth[depth], key=lambda n: n.y)
+            nodes = sorted(by_depth[depth], key=lambda n: n.x)
             for i in range(1, len(nodes)):
                 prev = nodes[i - 1]
                 curr = nodes[i]
-                min_y = prev.y + VERTICAL_SPACING
-                if curr.y < min_y:
+                min_x = prev.x + HORIZONTAL_SPACING
+                if curr.x < min_x:
                     # Shift this node and its subtree
-                    shift = min_y - curr.y
-                    self._shift_subtree_vertical(curr, shift)
+                    shift = min_x - curr.x
+                    self._shift_subtree_horizontal(curr, shift)
 
-    def _shift_subtree_vertical(self, node: TrieLayoutNode, shift: float) -> None:
-        """Shift a node and all its descendants vertically."""
-        node.y += shift
+    def _shift_subtree_horizontal(self, node: TrieLayoutNode, shift: float) -> None:
+        """Shift a node and all its descendants horizontally."""
+        node.x += shift
         for child in node.children:
-            self._shift_subtree_vertical(child, shift)
+            self._shift_subtree_horizontal(child, shift)
 
-    def _assign_x_positions_by_depth(self, node: TrieLayoutNode) -> None:
-        """Assign X positions based on depth (left-to-right orientation)."""
-        node.x = node.depth * HORIZONTAL_SPACING
+    def _assign_y_positions_by_depth(self, node: TrieLayoutNode) -> None:
+        """Assign Y positions based on depth (bottom-to-top orientation)."""
+        # Negative Y so root is at bottom, children go upward
+        node.y = -node.depth * VERTICAL_SPACING
         for child in node.children:
-            self._assign_x_positions_by_depth(child)
+            self._assign_y_positions_by_depth(child)
 
     def _normalize_positions(self) -> None:
         """Normalize so min_x = 0, compute bounds."""
@@ -377,25 +378,25 @@ class TrieVisualization:
         if not self._current_path:
             return
 
-        # Layout path nodes in a horizontal line
+        # Layout path nodes in a vertical line (bottom-to-top)
         for i, node in enumerate(self._current_path):
-            self._focus_positions[node] = (i * HORIZONTAL_SPACING, 0)
+            self._focus_positions[node] = (0, -i * VERTICAL_SPACING)
 
-        # Layout available moves vertically from the active node
+        # Layout available moves horizontally from the active node
         active_node = self._get_active_node()
         if active_node:
-            active_x = self._focus_positions.get(active_node, (0, 0))[0]
+            active_y = self._focus_positions.get(active_node, (0, 0))[1]
             available_moves = [
                 child for child in active_node.children
                 if child.path_index is None  # Not already on the path
             ]
-            # Spread vertically, centered around the path (y=0)
+            # Spread horizontally, centered around the path (x=0)
             if available_moves:
-                start_y = -(len(available_moves) - 1) * VERTICAL_SPACING / 2
+                start_x = -(len(available_moves) - 1) * HORIZONTAL_SPACING / 2
                 for i, child in enumerate(available_moves):
                     self._focus_positions[child] = (
-                        active_x + HORIZONTAL_SPACING,
-                        start_y + i * VERTICAL_SPACING,
+                        start_x + i * HORIZONTAL_SPACING,
+                        active_y - VERTICAL_SPACING,
                     )
 
     def _get_node_position(self, node: TrieLayoutNode) -> tuple[float, float]:
