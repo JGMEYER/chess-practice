@@ -7,6 +7,8 @@ from typing import TYPE_CHECKING
 
 import pygame
 
+from graphics import aa_draw
+
 if TYPE_CHECKING:
     from chess.patterns.openings import TrieNode
 
@@ -719,7 +721,8 @@ class TrieVisualization:
             color = EDGE_COLOR
             width = 1
 
-        pygame.draw.line(surface, color, (p_sx, p_sy), (c_sx, c_sy), width)
+        # Draw anti-aliased line
+        aa_draw.line(surface, (p_sx, p_sy), (c_sx, c_sy), color, width)
 
     def _draw_nodes(self, surface: pygame.Surface, rect: pygame.Rect) -> None:
         """Draw all nodes."""
@@ -809,19 +812,16 @@ class TrieVisualization:
             border_color = None
             border_width = 0
 
-        # Draw node circle
-        pygame.draw.circle(surface, fill_color, (screen_x, screen_y), radius)
+        # Draw node circle with anti-aliasing
+        aa_draw.circle(surface, screen_x, screen_y, radius, fill_color)
+
         if border_color:
-            pygame.draw.circle(
-                surface, border_color, (screen_x, screen_y), radius, border_width
-            )
+            aa_draw.circle_outline(surface, screen_x, screen_y, radius, border_color, border_width)
 
         # Selection indicator: draw an outer ring (additive to path styling)
         if is_selected:
             selection_radius = radius + 4
-            pygame.draw.circle(
-                surface, NODE_SELECTED_BORDER, (screen_x, screen_y), selection_radius, 3
-            )
+            aa_draw.circle_outline(surface, screen_x, screen_y, selection_radius, NODE_SELECTED_BORDER, 3)
 
         # Draw SAN label (if not root and zoom is sufficient)
         if node.san and self._viewport.zoom >= 0.5:
