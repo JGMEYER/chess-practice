@@ -15,6 +15,7 @@ if TYPE_CHECKING:
 HORIZONTAL_SPACING = 140
 VERTICAL_SPACING = 50
 NODE_RADIUS = 18
+PAN_SPEED_MULTIPLIER = 2.5  # Makes panning feel more responsive
 
 # Color constants
 NODE_COLOR = (80, 80, 80)
@@ -396,7 +397,10 @@ class TrieVisualization:
 
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             return self._handle_click(event.pos, rect)
-        elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 2:
+            # Middle mouse button - always start panning
+            return self._handle_middle_click(event.pos, rect)
+        elif event.type == pygame.MOUSEBUTTONUP and event.button in (1, 2):
             return self._handle_release()
         elif event.type == pygame.MOUSEMOTION:
             return self._handle_motion(event.pos, rect)
@@ -413,20 +417,24 @@ class TrieVisualization:
 
         self._hovered_node = self._find_node_at_pos(pos, rect)
 
+    def _start_pan(self, pos: tuple[int, int]) -> None:
+        """Start panning from the given position."""
+        self._dragging = True
+        self._drag_start = pos
+        self._last_drag_pos = pos
+
     def _handle_click(
         self, pos: tuple[int, int], rect: pygame.Rect
     ) -> str | None:
-        """Handle mouse button down."""
+        """Handle left mouse button down."""
         if not rect.collidepoint(pos):
             return None
 
         clicked_node = self._find_node_at_pos(pos, rect)
 
         if clicked_node is None:
-            # Start pan drag
-            self._dragging = True
-            self._drag_start = pos
-            self._last_drag_pos = pos
+            # No node clicked - start panning
+            self._start_pan(pos)
             return None
 
         if clicked_node == self._selected_node:
@@ -442,6 +450,15 @@ class TrieVisualization:
         self._selected_node = clicked_node
         return "trie_select"
 
+    def _handle_middle_click(
+        self, pos: tuple[int, int], rect: pygame.Rect
+    ) -> str | None:
+        """Handle middle mouse button - always start panning."""
+        if not rect.collidepoint(pos):
+            return None
+        self._start_pan(pos)
+        return None
+
     def _handle_release(self) -> str | None:
         """Handle mouse button up."""
         self._dragging = False
@@ -454,13 +471,13 @@ class TrieVisualization:
     ) -> str | None:
         """Handle mouse motion."""
         if self._dragging and self._last_drag_pos is not None:
-            # Pan the viewport
             dx = pos[0] - self._last_drag_pos[0]
             dy = pos[1] - self._last_drag_pos[1]
 
-            # Move viewport in opposite direction of drag
-            self._viewport.offset_x -= dx / self._viewport.zoom
-            self._viewport.offset_y -= dy / self._viewport.zoom
+            # Apply speed multiplier and scale by zoom for consistent feel
+            speed = PAN_SPEED_MULTIPLIER / self._viewport.zoom
+            self._viewport.offset_x -= dx * speed
+            self._viewport.offset_y -= dy * speed
 
             self._last_drag_pos = pos
 
