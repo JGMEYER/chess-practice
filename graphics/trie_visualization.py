@@ -336,7 +336,39 @@ class TrieVisualization:
         self._focus_mode = enabled
         if enabled:
             self._compute_focus_layout()
+            self._zoom_to_fit_focus()
         self.center_on_current_position()
+
+    def _zoom_to_fit_focus(self) -> None:
+        """Adjust zoom to fit all visible nodes in focus mode within viewport."""
+        if not self._focus_positions or self._rect is None:
+            return
+
+        # Get bounding box of all focus mode nodes
+        positions = list(self._focus_positions.values())
+        if not positions:
+            return
+
+        min_x = min(p[0] for p in positions)
+        max_x = max(p[0] for p in positions)
+        min_y = min(p[1] for p in positions)
+        max_y = max(p[1] for p in positions)
+
+        # Add padding for node radius and some margin
+        padding = NODE_RADIUS * 2 + 40
+        world_width = max_x - min_x + padding * 2
+        world_height = max_y - min_y + padding * 2
+
+        # Calculate zoom to fit
+        if world_width > 0 and world_height > 0:
+            zoom_x = self._rect.width / world_width
+            zoom_y = self._rect.height / world_height
+            target_zoom = min(zoom_x, zoom_y)
+
+            # Clamp to zoom limits
+            self._viewport.zoom = max(
+                Viewport.MIN_ZOOM, min(Viewport.MAX_ZOOM, target_zoom)
+            )
 
     def _compute_focus_layout(self) -> None:
         """Compute compact positions for visible nodes in focus mode."""
@@ -408,6 +440,9 @@ class TrieVisualization:
         Nodes with path_index <= current_move_count are on the active path.
         Nodes with path_index > current_move_count are on the "future" path (undone moves).
         """
+        # Track if move count changed (for zoom-to-fit in focus mode)
+        move_count_changed = current_move_count != self._current_move_count
+
         # Store current move count for active node detection
         self._current_move_count = current_move_count
 
@@ -444,6 +479,9 @@ class TrieVisualization:
         # Recompute focus layout if focus mode is active
         if self._focus_mode:
             self._compute_focus_layout()
+            # Zoom to fit when navigating (move count changed)
+            if move_count_changed:
+                self._zoom_to_fit_focus()
 
     def center_on_current_position(self) -> None:
         """Center viewport on the current active node (at current_move_count)."""
