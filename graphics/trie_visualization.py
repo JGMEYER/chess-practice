@@ -353,22 +353,34 @@ class TrieVisualization:
         self.center_on_current_position()
 
     def _zoom_to_fit_focus(self) -> None:
-        """Adjust zoom to fit all visible nodes in focus mode within viewport."""
+        """Adjust zoom to fit current node and available moves within viewport."""
         if not self._focus_positions or self._rect is None:
             return
 
-        # Get bounding box of all focus mode nodes
-        positions = list(self._focus_positions.values())
-        if not positions:
+        # Get active node and its available moves - these are what we care about fitting
+        active_node = self._get_active_node()
+        if active_node is None:
             return
 
-        min_x = min(p[0] for p in positions)
-        max_x = max(p[0] for p in positions)
-        min_y = min(p[1] for p in positions)
-        max_y = max(p[1] for p in positions)
+        # Collect positions of active node and its available moves (children not on path)
+        positions_to_fit = []
+        if active_node in self._focus_positions:
+            positions_to_fit.append(self._focus_positions[active_node])
 
-        # Add padding for node radius and some margin
-        padding = NODE_RADIUS * 2 + 40
+        for child in active_node.children:
+            if child in self._focus_positions:
+                positions_to_fit.append(self._focus_positions[child])
+
+        if not positions_to_fit:
+            return
+
+        min_x = min(p[0] for p in positions_to_fit)
+        max_x = max(p[0] for p in positions_to_fit)
+        min_y = min(p[1] for p in positions_to_fit)
+        max_y = max(p[1] for p in positions_to_fit)
+
+        # Add generous padding for node radius, selection ring, and margin
+        padding = NODE_RADIUS * 3 + 60
         world_width = max_x - min_x + padding * 2
         world_height = max_y - min_y + padding * 2
 
