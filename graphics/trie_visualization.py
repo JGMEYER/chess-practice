@@ -320,8 +320,13 @@ class TrieVisualization:
 
         # Center on root initially
         if self._layout.root:
-            self._viewport.offset_x = self._layout.root.x
-            self._viewport.offset_y = self._layout.root.y
+            if self._focus_mode:
+                # In focus mode, root will be at (0, 0) in the focus layout
+                self._viewport.offset_x = 0
+                self._viewport.offset_y = 0
+            else:
+                self._viewport.offset_x = self._layout.root.x
+                self._viewport.offset_y = self._layout.root.y
 
     @property
     def selected_node(self) -> TrieLayoutNode | None:
