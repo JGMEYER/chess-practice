@@ -17,6 +17,11 @@ VERTICAL_SPACING = 140
 NODE_RADIUS = 18
 PAN_SPEED_MULTIPLIER = 2.5  # Makes panning feel more responsive
 
+# Font constants
+BASE_FONT_SIZE = 18  # Font size at zoom 1.0
+MIN_FONT_SIZE = 18  # Minimum font size for legibility when zoomed out
+MAX_FONT_SIZE = 32  # Maximum font size when zoomed in
+
 # Color constants
 NODE_COLOR = (80, 80, 80)
 NODE_PATH_COLOR = (100, 160, 100)
@@ -313,7 +318,7 @@ class TrieVisualization:
         self._dragging = False
         self._drag_start: tuple[int, int] | None = None
         self._last_drag_pos: tuple[int, int] | None = None
-        self._font: pygame.font.Font | None = None
+        self._fonts: dict[int, pygame.font.Font] = {}  # Cache fonts by size
         self._rect: pygame.Rect | None = None
         self._focus_mode = True  # Focus mode enabled by default
         self._focus_positions: dict[TrieLayoutNode, tuple[float, float]] = {}
@@ -654,10 +659,6 @@ class TrieVisualization:
         """Draw the trie visualization within the given rect."""
         self._rect = rect
 
-        # Initialize font if needed
-        if self._font is None:
-            self._font = pygame.font.Font(None, 16)
-
         # Clip to rect
         surface.set_clip(rect)
 
@@ -832,9 +833,17 @@ class TrieVisualization:
                 text_color = TEXT_PATH_COLOR
             else:
                 text_color = TEXT_COLOR
+            # Max width is slightly less than diameter to leave padding
+            max_text_width = int(radius * 1.8)
             self._draw_text_centered(
-                surface, node.san, screen_x, screen_y, text_color
+                surface, node.san, screen_x, screen_y, text_color, max_text_width
             )
+
+    def _get_font(self, size: int) -> pygame.font.Font:
+        """Get or create a font of the given size."""
+        if size not in self._fonts:
+            self._fonts[size] = pygame.font.Font(None, size)
+        return self._fonts[size]
 
     def _draw_text_centered(
         self,
@@ -843,11 +852,24 @@ class TrieVisualization:
         x: int,
         y: int,
         color: tuple[int, int, int],
+        max_width: int,
     ) -> None:
-        """Draw text centered at the given position."""
-        if self._font is None:
-            return
+        """Draw text centered at the given position, scaled to fit max_width."""
+        scaled_size = int(BASE_FONT_SIZE * self._viewport.zoom)
 
-        text_surface = self._font.render(text, True, color)
+        # Clamp font size: prioritize legibility when zoomed out
+        font_size = max(MIN_FONT_SIZE, min(scaled_size, MAX_FONT_SIZE))
+
+        font = self._get_font(font_size)
+        text_surface = font.render(text, True, color)
+
+        # Only shrink to fit when zoomed in (text would be large anyway)
+        # When zoomed out, keep text legible even if it overflows the node
+        if self._viewport.zoom >= 1.0:
+            while text_surface.get_width() > max_width and font_size > MIN_FONT_SIZE:
+                font_size -= 1
+                font = self._get_font(font_size)
+                text_surface = font.render(text, True, color)
+
         text_rect = text_surface.get_rect(center=(x, y))
         surface.blit(text_surface, text_rect)
