@@ -44,9 +44,10 @@ class TriePanel:
         if self._trie_viz:
             self._trie_viz.update_current_path(san_history, current_move_count)
 
-            # Auto-center when path changes
+            # Auto-center and select active node when move count changes
             if current_move_count != self._last_path_length:
                 self._trie_viz.center_on_current_position()
+                self._trie_viz.select_current_position()
                 self._last_path_length = current_move_count
 
     def set_visible(self, visible: bool, rect: pygame.Rect | None = None) -> None:

@@ -317,6 +317,11 @@ class TrieVisualization:
     def selected_node(self) -> TrieLayoutNode | None:
         return self._selected_node
 
+    def select_current_position(self) -> None:
+        """Select the node at the current active position."""
+        if self._current_path and self._current_move_count < len(self._current_path):
+            self._selected_node = self._current_path[self._current_move_count]
+
     def update_current_path(
         self, san_history: list[str], current_move_count: int
     ) -> None:
