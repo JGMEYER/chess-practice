@@ -145,6 +145,10 @@ class OpeningTrie:
         with open(path, newline="", encoding="utf-8") as f:
             reader = csv.DictReader(f)
             for row in reader:
+                # Skip "Mate" type entries - they're checkmate patterns, not openings
+                if row.get("type") != "Opening":
+                    continue
+
                 opening_name = row["opening_name"]
                 variation_name = row["variation_name"] or None
                 movetext = row["moves"]
