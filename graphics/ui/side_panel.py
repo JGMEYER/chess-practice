@@ -53,9 +53,9 @@ class SidePanel:
 
     def _get_tab_rect(self) -> pygame.Rect:
         """Get the rectangle for the tab button."""
-        # Tab is positioned at the right edge of the current window
-        base_width = WINDOW_WIDTH_EXPANDED if self._expanded else WINDOW_WIDTH
-        tab_x = base_width - SIDE_PANEL_TAB_WIDTH
+        # Tab stays in fixed position at the edge of the base window (where panel starts)
+        # This allows quick toggling without the tab moving
+        tab_x = WINDOW_WIDTH - SIDE_PANEL_TAB_WIDTH
         # Center the tab vertically in the window (below menu bar)
         content_height = WINDOW_HEIGHT - MENU_BAR_HEIGHT
         tab_y = MENU_BAR_HEIGHT + (content_height - SIDE_PANEL_TAB_HEIGHT) // 2
