@@ -315,7 +315,7 @@ class TrieVisualization:
         self._last_drag_pos: tuple[int, int] | None = None
         self._font: pygame.font.Font | None = None
         self._rect: pygame.Rect | None = None
-        self._focus_mode = False
+        self._focus_mode = True  # Focus mode enabled by default
         self._focus_positions: dict[TrieLayoutNode, tuple[float, float]] = {}
 
         # Center on root initially

@@ -140,6 +140,7 @@ class TriePanel:
                 relative_rect=checkbox_pos,
                 text="Hide other lines",
                 manager=self._ui_manager,
+                initial_state=True,  # Focus mode enabled by default
             )
 
     def _destroy_ui_elements(self) -> None:
