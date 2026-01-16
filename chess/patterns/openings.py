@@ -45,6 +45,11 @@ class OpeningTrie:
     def __init__(self) -> None:
         self._root = TrieNode()
 
+    @property
+    def root(self) -> TrieNode:
+        """Get the root node of the trie."""
+        return self._root
+
     def insert(
         self, san_moves: list[str], opening_name: str, variation_name: str | None
     ) -> None:

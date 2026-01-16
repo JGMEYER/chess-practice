@@ -22,6 +22,7 @@ from graphics.ui import (
     PromotionDialog,
     PGNDialog,
     SidePanel,
+    TriePanel,
 )
 from graphics.constants import (
     BOARD_PIXEL_SIZE,
@@ -91,7 +92,8 @@ def main():
     # Initialize UI components
     menu_bar = MenuBar(ui_manager, WINDOW_WIDTH)
     control_panel = ControlPanel(ui_manager, icon_loader)
-    side_panel = SidePanel()
+    trie_panel = TriePanel(ui_manager)
+    side_panel = SidePanel(content=trie_panel)
 
     # Dialog state
     fen_dialog: FENDialog | None = None
@@ -102,6 +104,9 @@ def main():
 
     # Initialize game controller
     game = GameController()
+
+    # Initialize trie visualization with the opening trie
+    trie_panel.set_trie(game.opening_trie.root)
 
     clock = pygame.time.Clock()
     running = True
@@ -243,6 +248,20 @@ def main():
                     screen = pygame.display.set_mode(
                         (side_panel.get_window_width(), WINDOW_HEIGHT)
                     )
+                    ui_manager.set_window_resolution(
+                        (side_panel.get_window_width(), WINDOW_HEIGHT)
+                    )
+
+            # Handle side panel events (trie visualization interactions)
+            trie_action = side_panel.process_event(event)
+            if trie_action is not None:
+                if trie_action.startswith("trie_navigate:"):
+                    # Navigate to the specified move index
+                    target_index = int(trie_action.split(":")[1])
+                    game.move_executor.jump_to_history_index(target_index)
+                    game.clear_selection()
+                    game._update_current_opening()
+                # "trie_center" and "trie_select" are handled internally
 
             # Handle mouse motion for side panel hover
             if event.type == pygame.MOUSEMOTION:
@@ -260,6 +279,9 @@ def main():
             game.update_ai()
         except AIPlayerError as e:
             show_error_dialog(ui_manager, (WINDOW_WIDTH, WINDOW_HEIGHT), f"AI error: {e}")
+
+        # Update trie visualization with current game state
+        trie_panel.update(game.san_history, game.current_move_count)
 
         # Update UI
         ui_manager.update(time_delta)

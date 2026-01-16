@@ -398,3 +398,33 @@ class MoveExecutor:
         )
 
         return move
+
+    def jump_to_history_index(self, target_index: int) -> None:
+        """
+        Jump to a specific point in the move history via undo/redo.
+
+        Args:
+            target_index: Target index in history (0 = starting position,
+                          1 = after first move, etc.)
+
+        Raises:
+            ValueError: If target_index is out of valid range
+        """
+        current = len(self.game_state.move_history)
+        max_index = current + len(self.game_state.redo_history)
+
+        if target_index < 0:
+            raise ValueError(f"Invalid history index: {target_index} (cannot be negative)")
+        if target_index > max_index:
+            raise ValueError(
+                f"Invalid history index: {target_index} (max reachable: {max_index})"
+            )
+
+        if target_index < current:
+            # Undo moves
+            for _ in range(current - target_index):
+                self.undo_move()
+        elif target_index > current:
+            # Redo moves
+            for _ in range(target_index - current):
+                self.redo_move()

@@ -38,7 +38,7 @@ CONTROL_ICON_SIZE = 32  # Smaller than button to show button background/hover st
 CONTROL_BUTTON_SPACING = 10
 
 # Expandable side panel dimensions
-SIDE_PANEL_WIDTH = 300
+SIDE_PANEL_WIDTH = 900
 SIDE_PANEL_TAB_WIDTH = 20
 SIDE_PANEL_TAB_HEIGHT = 80
 

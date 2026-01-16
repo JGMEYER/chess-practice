@@ -21,7 +21,7 @@ from chess import (
     PGNError,
 )
 from chess.game_state import GameState
-from chess.patterns import Opening, load_openings
+from chess.patterns import Opening, OpeningTrie, load_openings
 
 if TYPE_CHECKING:
     from chess import PieceType
@@ -84,6 +84,16 @@ class GameController:
     def ai_available(self) -> bool:
         """Check if AI (Stockfish) is available."""
         return self._ai_player is not None
+
+    @property
+    def opening_trie(self) -> OpeningTrie:
+        """Access the opening trie for visualization."""
+        return self._opening_trie
+
+    @property
+    def current_move_count(self) -> int:
+        """Current position in move history (0 = starting, 1 = after first move)."""
+        return len(self.game_state.move_history)
 
     @property
     def is_human_turn(self) -> bool:

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, Protocol
+
 import pygame
 
 from graphics.constants import (
@@ -13,6 +15,18 @@ from graphics.constants import (
     SIDEBAR_BACKGROUND,
 )
 
+if TYPE_CHECKING:
+    pass
+
+
+class PanelContent(Protocol):
+    """Protocol for side panel content components."""
+
+    def set_visible(self, visible: bool, rect: pygame.Rect | None = None) -> None: ...
+    def process_event(self, event: pygame.event.Event) -> str | None: ...
+    def update_hover(self, pos: tuple[int, int]) -> None: ...
+    def draw(self, surface: pygame.Surface) -> None: ...
+
 
 class SidePanel:
     """Expandable side panel on the right edge of the window."""
@@ -22,11 +36,11 @@ class SidePanel:
     TAB_HOVER_COLOR = (74, 72, 69)  # Slightly lighter on hover
     TAB_ARROW_COLOR = (180, 180, 180)  # Light gray arrow
 
-    def __init__(self):
+    def __init__(self, content: PanelContent | None = None):
         """Initialize the side panel in collapsed state."""
         self._expanded = False
         self._tab_hovered = False
-        self._font: pygame.font.Font | None = None
+        self._content = content
 
     @property
     def expanded(self) -> bool:
@@ -54,9 +68,19 @@ class SidePanel:
         panel_height = WINDOW_HEIGHT - MENU_BAR_HEIGHT
         return pygame.Rect(panel_x, panel_y, SIDE_PANEL_WIDTH, panel_height)
 
+    def process_event(self, event: pygame.event.Event) -> str | None:
+        """
+        Process events for the side panel and its content.
+
+        Returns action string from content, or None.
+        """
+        if self._expanded and self._content is not None:
+            return self._content.process_event(event)
+        return None
+
     def handle_click(self, pos: tuple[int, int]) -> bool:
         """
-        Handle a mouse click event.
+        Handle a mouse click event on the tab.
 
         Args:
             pos: Mouse position (x, y)
@@ -67,6 +91,10 @@ class SidePanel:
         tab_rect = self._get_tab_rect()
         if tab_rect.collidepoint(pos):
             self._expanded = not self._expanded
+            # Notify content of visibility change
+            if self._content is not None:
+                panel_rect = self._get_panel_rect()
+                self._content.set_visible(self._expanded, panel_rect)
             return True
         return False
 
@@ -79,6 +107,10 @@ class SidePanel:
         """
         tab_rect = self._get_tab_rect()
         self._tab_hovered = tab_rect.collidepoint(pos)
+
+        # Forward hover to content
+        if self._expanded and self._content is not None:
+            self._content.update_hover(pos)
 
     def draw(self, surface: pygame.Surface) -> None:
         """
@@ -99,6 +131,10 @@ class SidePanel:
                 (panel_rect.left, panel_rect.top),
                 (panel_rect.left, panel_rect.bottom),
             )
+
+            # Draw content
+            if self._content is not None:
+                self._content.draw(surface)
 
         # Draw tab
         tab_rect = self._get_tab_rect()
