@@ -402,26 +402,58 @@ class TrieVisualization:
         if not self._current_path:
             return
 
-        # Layout path nodes in a vertical line (bottom-to-top)
+        # Layout ALL path nodes in a vertical line (bottom-to-top)
         for i, node in enumerate(self._current_path):
             self._focus_positions[node] = (0, -i * VERTICAL_SPACING)
 
-        # Layout available moves horizontally from the active node
+        # Layout available moves (non-path children) horizontally from the active node
         active_node = self._get_active_node()
         if active_node:
             active_y = self._focus_positions.get(active_node, (0, 0))[1]
-            available_moves = [
+            child_y = active_y - VERTICAL_SPACING
+
+            # Get non-path children only (path child is already in vertical layout)
+            available_children = [
                 child for child in active_node.children
-                if child.path_index is None  # Not already on the path
+                if child.path_index is None
             ]
-            # Spread horizontally, centered around the path (x=0)
-            if available_moves:
-                start_x = -(len(available_moves) - 1) * HORIZONTAL_SPACING / 2
-                for i, child in enumerate(available_moves):
-                    self._focus_positions[child] = (
-                        start_x + i * HORIZONTAL_SPACING,
-                        active_y - VERTICAL_SPACING,
-                    )
+
+            # Spread all children (path + non-path) horizontally, centered around x=0
+            # Path node stays at center, available moves spread around it
+            if available_children:
+                # Total children = available + 1 path node (if exists)
+                path_child = next(
+                    (c for c in active_node.children if c.path_index is not None),
+                    None
+                )
+
+                if path_child:
+                    # Center available moves around the path node at x=0
+                    # Split available moves: half to the left, half to the right
+                    left_children = available_children[:len(available_children) // 2]
+                    right_children = available_children[len(available_children) // 2:]
+
+                    # Place left children
+                    for i, child in enumerate(reversed(left_children)):
+                        self._focus_positions[child] = (
+                            -(i + 1) * HORIZONTAL_SPACING,
+                            child_y,
+                        )
+
+                    # Place right children
+                    for i, child in enumerate(right_children):
+                        self._focus_positions[child] = (
+                            (i + 1) * HORIZONTAL_SPACING,
+                            child_y,
+                        )
+                else:
+                    # No path child - center all available moves around x=0
+                    start_x = -(len(available_children) - 1) * HORIZONTAL_SPACING / 2
+                    for i, child in enumerate(available_children):
+                        self._focus_positions[child] = (
+                            start_x + i * HORIZONTAL_SPACING,
+                            child_y,
+                        )
 
     def _get_node_position(self, node: TrieLayoutNode) -> tuple[float, float]:
         """Get node position, using focus layout if in focus mode."""
@@ -437,7 +469,7 @@ class TrieVisualization:
 
     def _is_visible_in_focus_mode(self, node: TrieLayoutNode) -> bool:
         """Check if node should be visible in focus mode."""
-        # Always show nodes on the path
+        # Show all nodes on the path (past and future)
         if node.path_index is not None:
             return True
         # Show immediate children of the active node
