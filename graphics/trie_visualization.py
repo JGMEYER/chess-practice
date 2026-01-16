@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 # Layout constants
 HORIZONTAL_SPACING = 140
-VERTICAL_SPACING = 50
+VERTICAL_SPACING = 60  # Increased from 50 for better spacing in focus mode
 NODE_RADIUS = 18
 PAN_SPEED_MULTIPLIER = 2.5  # Makes panning feel more responsive
 

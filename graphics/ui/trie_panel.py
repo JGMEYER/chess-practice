@@ -25,7 +25,8 @@ if TYPE_CHECKING:
 CENTER_BUTTON_HEIGHT = 30
 CHECKBOX_HEIGHT = 25
 CENTER_BUTTON_MARGIN = 10
-INFO_PANEL_HEIGHT = 180
+INFO_PANEL_HEIGHT = 120  # Reduced from 180 to give more space to visualization
+CONTROL_WIDTH = 160  # Width of controls in info panel
 
 
 class TriePanel:
@@ -86,17 +87,11 @@ class TriePanel:
         if self._rect is None:
             return pygame.Rect(0, 0, 0, 0)
 
-        # Account for button + checkbox + margins
-        controls_height = CENTER_BUTTON_HEIGHT + CHECKBOX_HEIGHT + CENTER_BUTTON_MARGIN * 3
-        viz_y = self._rect.top + controls_height
-        viz_height = (
-            self._rect.height
-            - controls_height
-            - INFO_PANEL_HEIGHT
-        )
+        # Visualization now starts at top of panel (controls moved to info panel)
+        viz_height = self._rect.height - INFO_PANEL_HEIGHT - 10
         return pygame.Rect(
             self._rect.left + 5,
-            viz_y,
+            self._rect.top + 5,
             self._rect.width - 10,
             max(viz_height, 100),  # Minimum height
         )
@@ -114,16 +109,18 @@ class TriePanel:
         )
 
     def _create_ui_elements(self) -> None:
-        """Create the UI elements (center button and focus checkbox)."""
+        """Create the UI elements (center button and focus checkbox) in info panel."""
         if self._rect is None:
             return
 
-        # Create center button
+        info_rect = self._get_info_rect()
+
+        # Create center button (right side of info panel)
         if self._center_button is None:
             button_rect = pygame.Rect(
-                self._rect.left + CENTER_BUTTON_MARGIN,
-                self._rect.top + CENTER_BUTTON_MARGIN,
-                self._rect.width - CENTER_BUTTON_MARGIN * 2,
+                info_rect.right - CONTROL_WIDTH - 5,
+                info_rect.top + 5,
+                CONTROL_WIDTH,
                 CENTER_BUTTON_HEIGHT,
             )
             self._center_button = UIButton(
@@ -132,17 +129,16 @@ class TriePanel:
                 manager=self._ui_manager,
             )
 
-        # Create focus mode checkbox (if available)
+        # Create focus mode checkbox (below button)
+        # Use position tuple only - let pygame_gui auto-size for proper checkbox appearance
         if HAS_CHECKBOX and self._focus_checkbox is None:
-            checkbox_rect = pygame.Rect(
-                self._rect.left + CENTER_BUTTON_MARGIN,
-                self._rect.top + CENTER_BUTTON_MARGIN + CENTER_BUTTON_HEIGHT + 5,
-                self._rect.width - CENTER_BUTTON_MARGIN * 2,
-                CHECKBOX_HEIGHT,
+            checkbox_pos = (
+                info_rect.right - CONTROL_WIDTH - 5,
+                info_rect.top + CENTER_BUTTON_HEIGHT + 12,
             )
             self._focus_checkbox = UICheckBox(
-                relative_rect=checkbox_rect,
-                text="Focus Mode",
+                relative_rect=checkbox_pos,
+                text="Hide other lines",
                 manager=self._ui_manager,
             )
 
@@ -240,12 +236,17 @@ class TriePanel:
         if self._font is None:
             self._font = pygame.font.Font(None, 18)
 
+        # Text area width (leave space for controls on right)
+        text_max_x = info_rect.right - CONTROL_WIDTH - 15
+
         selected = self._trie_viz.selected_node
         if selected is None:
-            # No selection - show hint
+            # No selection - show hint (centered in text area, not full panel)
             hint_text = "Click a node to see opening info"
             text_surface = self._font.render(hint_text, True, (120, 120, 120))
-            text_rect = text_surface.get_rect(center=info_rect.center)
+            text_rect = text_surface.get_rect(
+                center=(info_rect.left + (text_max_x - info_rect.left) // 2, info_rect.centery)
+            )
             surface.blit(text_surface, text_rect)
             return
 
@@ -264,7 +265,7 @@ class TriePanel:
         y_offset += line_height + 5
 
         # Reserve space at bottom for path hint if on path
-        path_hint_height = 25 if selected.path_index is not None else 0
+        path_hint_height = 20 if selected.path_index is not None else 0
 
         # Show openings at this node
         openings = list(selected.trie_node.openings)
@@ -273,7 +274,7 @@ class TriePanel:
             names = sorted(set(o.display_name for o in openings))
 
             # Limit display to fit in panel (accounting for header and path hint)
-            available_height = info_rect.height - 40 - path_hint_height
+            available_height = info_rect.height - 35 - path_hint_height
             max_lines = max(1, available_height // line_height)
             for i, name in enumerate(names[:max_lines]):
                 if i == max_lines - 1 and len(names) > max_lines:
@@ -289,6 +290,6 @@ class TriePanel:
 
         # Show if on current path (clickable hint)
         if selected.path_index is not None:
-            path_text = f"On path (move {selected.path_index}) - click again to go"
+            path_text = f"On path (move {selected.path_index}) - click to go"
             text_surface = self._font.render(path_text, True, (100, 160, 100))
-            surface.blit(text_surface, (x_offset, info_rect.bottom - 25))
+            surface.blit(text_surface, (x_offset, info_rect.bottom - 20))
