@@ -42,8 +42,14 @@ TEXT_COLOR = (180, 180, 180)
 TEXT_PATH_COLOR = (255, 255, 255)
 TEXT_PATH_FADED_COLOR = (200, 200, 200)
 
+# Focus mode colors (available next moves from active node)
+NODE_AVAILABLE_COLOR = (200, 170, 80)
+NODE_AVAILABLE_BORDER = (230, 200, 100)
+EDGE_AVAILABLE_COLOR = (180, 150, 60)
+TEXT_AVAILABLE_COLOR = (255, 240, 200)
 
-@dataclass
+
+@dataclass(eq=False)
 class TrieLayoutNode:
     """A node in the laid-out trie with position information."""
 
@@ -308,6 +314,8 @@ class TrieVisualization:
         self._last_drag_pos: tuple[int, int] | None = None
         self._font: pygame.font.Font | None = None
         self._rect: pygame.Rect | None = None
+        self._focus_mode = False
+        self._focus_positions: dict[TrieLayoutNode, tuple[float, float]] = {}
 
         # Center on root initially
         if self._layout.root:
@@ -322,6 +330,71 @@ class TrieVisualization:
         """Select the node at the current active position."""
         if self._current_path and self._current_move_count < len(self._current_path):
             self._selected_node = self._current_path[self._current_move_count]
+
+    def set_focus_mode(self, enabled: bool) -> None:
+        """Enable/disable focus mode (show only path + available moves)."""
+        self._focus_mode = enabled
+        if enabled:
+            self._compute_focus_layout()
+        self.center_on_current_position()
+
+    def _compute_focus_layout(self) -> None:
+        """Compute compact positions for visible nodes in focus mode."""
+        self._focus_positions = {}
+
+        if not self._current_path:
+            return
+
+        # Layout path nodes in a horizontal line
+        for i, node in enumerate(self._current_path):
+            self._focus_positions[node] = (i * HORIZONTAL_SPACING, 0)
+
+        # Layout available moves vertically from the active node
+        active_node = self._get_active_node()
+        if active_node:
+            active_x = self._focus_positions.get(active_node, (0, 0))[0]
+            available_moves = [
+                child for child in active_node.children
+                if child.path_index is None  # Not already on the path
+            ]
+            # Spread vertically, centered around the path (y=0)
+            if available_moves:
+                start_y = -(len(available_moves) - 1) * VERTICAL_SPACING / 2
+                for i, child in enumerate(available_moves):
+                    self._focus_positions[child] = (
+                        active_x + HORIZONTAL_SPACING,
+                        start_y + i * VERTICAL_SPACING,
+                    )
+
+    def _get_node_position(self, node: TrieLayoutNode) -> tuple[float, float]:
+        """Get node position, using focus layout if in focus mode."""
+        if self._focus_mode and node in self._focus_positions:
+            return self._focus_positions[node]
+        return (node.x, node.y)
+
+    def _get_active_node(self) -> TrieLayoutNode | None:
+        """Get the current active node (at current_move_count)."""
+        if self._current_path and self._current_move_count < len(self._current_path):
+            return self._current_path[self._current_move_count]
+        return None
+
+    def _is_visible_in_focus_mode(self, node: TrieLayoutNode) -> bool:
+        """Check if node should be visible in focus mode."""
+        # Always show nodes on the path
+        if node.path_index is not None:
+            return True
+        # Show immediate children of the active node
+        active_node = self._get_active_node()
+        if active_node and node.parent == active_node:
+            return True
+        return False
+
+    def _is_available_move(self, node: TrieLayoutNode) -> bool:
+        """Check if node is an available next move (child of active, not on path)."""
+        if node.path_index is not None:
+            return False  # Already on path
+        active_node = self._get_active_node()
+        return active_node is not None and node.parent == active_node
 
     def update_current_path(
         self, san_history: list[str], current_move_count: int
@@ -368,19 +441,25 @@ class TrieVisualization:
             self._current_path.append(child)
             node = child
 
+        # Recompute focus layout if focus mode is active
+        if self._focus_mode:
+            self._compute_focus_layout()
+
     def center_on_current_position(self) -> None:
         """Center viewport on the current active node (at current_move_count)."""
         if self._current_path and self._current_move_count < len(self._current_path):
             # Center on the active node, not the end of the path
             active_node = self._current_path[self._current_move_count]
-            self._viewport.offset_x = active_node.x
-            self._viewport.offset_y = active_node.y
+            x, y = self._get_node_position(active_node)
+            self._viewport.offset_x = x
+            self._viewport.offset_y = y
 
     def center_on_root(self) -> None:
         """Center viewport on the root node."""
         if self._layout.root:
-            self._viewport.offset_x = self._layout.root.x
-            self._viewport.offset_y = self._layout.root.y
+            x, y = self._get_node_position(self._layout.root)
+            self._viewport.offset_x = x
+            self._viewport.offset_y = y
 
     def process_event(
         self, event: pygame.event.Event, rect: pygame.Rect
@@ -511,7 +590,12 @@ class TrieVisualization:
     ) -> TrieLayoutNode | None:
         """Find which node (if any) is at the given screen position."""
         for node in self._layout.get_all_nodes():
-            screen_x, screen_y = self._viewport.world_to_screen(node.x, node.y, rect)
+            # Skip nodes not visible in focus mode
+            if self._focus_mode and not self._is_visible_in_focus_mode(node):
+                continue
+
+            node_x, node_y = self._get_node_position(node)
+            screen_x, screen_y = self._viewport.world_to_screen(node_x, node_y, rect)
             radius = int(NODE_RADIUS * self._viewport.zoom)
 
             # Check if click is within node circle
@@ -549,6 +633,9 @@ class TrieVisualization:
         """Draw all edges between nodes."""
         for node in self._layout.get_all_nodes():
             if node.parent is not None:
+                # Skip edges not visible in focus mode
+                if self._focus_mode and not self._is_visible_in_focus_mode(node):
+                    continue
                 self._draw_edge(surface, node.parent, node, rect)
 
     def _draw_edge(
@@ -559,8 +646,10 @@ class TrieVisualization:
         rect: pygame.Rect,
     ) -> None:
         """Draw an edge from parent to child."""
-        p_sx, p_sy = self._viewport.world_to_screen(parent.x, parent.y, rect)
-        c_sx, c_sy = self._viewport.world_to_screen(child.x, child.y, rect)
+        p_x, p_y = self._get_node_position(parent)
+        c_x, c_y = self._get_node_position(child)
+        p_sx, p_sy = self._viewport.world_to_screen(p_x, p_y, rect)
+        c_sx, c_sy = self._viewport.world_to_screen(c_x, c_y, rect)
 
         # Check if edge is on the full path
         on_path = (
@@ -569,7 +658,13 @@ class TrieVisualization:
             and child.path_index == parent.path_index + 1
         )
 
-        if on_path:
+        # Check if this is an available move edge (focus mode)
+        is_available = self._focus_mode and self._is_available_move(child)
+
+        if is_available:
+            color = EDGE_AVAILABLE_COLOR
+            width = 2
+        elif on_path:
             # Check if this edge is on the active portion or future (undone) portion
             # Edge is "active" if the child is at or before current move count
             is_active = child.path_index <= self._current_move_count
@@ -585,11 +680,22 @@ class TrieVisualization:
         """Draw all nodes."""
         # Draw non-path nodes first, then path nodes on top
         path_nodes = []
+        available_nodes = []
         for node in self._layout.get_all_nodes():
+            # Skip nodes not visible in focus mode
+            if self._focus_mode and not self._is_visible_in_focus_mode(node):
+                continue
+
             if node.path_index is not None:
                 path_nodes.append(node)
+            elif self._focus_mode and self._is_available_move(node):
+                available_nodes.append(node)
             else:
                 self._draw_node(surface, node, rect)
+
+        # Draw available move nodes
+        for node in available_nodes:
+            self._draw_node(surface, node, rect)
 
         # Draw path nodes on top
         for node in path_nodes:
@@ -603,7 +709,8 @@ class TrieVisualization:
         self, surface: pygame.Surface, node: TrieLayoutNode, rect: pygame.Rect
     ) -> None:
         """Draw a single node."""
-        screen_x, screen_y = self._viewport.world_to_screen(node.x, node.y, rect)
+        node_x, node_y = self._get_node_position(node)
+        screen_x, screen_y = self._viewport.world_to_screen(node_x, node_y, rect)
         radius = int(NODE_RADIUS * self._viewport.zoom)
 
         # Skip if completely outside rect (with margin for radius)
@@ -624,9 +731,16 @@ class TrieVisualization:
         is_on_active_path = is_on_path and node.path_index <= self._current_move_count
         # Node is on "future" portion of path (undone moves)
         is_on_future_path = is_on_path and node.path_index > self._current_move_count
+        # Check if this is an available move (focus mode)
+        is_available_move = self._focus_mode and self._is_available_move(node)
 
         # Base styling: path status determines base appearance (always visible)
-        if is_active_node:
+        if is_available_move:
+            # Available next move in focus mode - gold
+            fill_color = NODE_AVAILABLE_COLOR
+            border_color = NODE_AVAILABLE_BORDER
+            border_width = 2
+        elif is_active_node:
             # Active node (current position) - brightest green
             fill_color = NODE_ACTIVE_COLOR
             border_color = NODE_ACTIVE_BORDER
@@ -666,7 +780,9 @@ class TrieVisualization:
 
         # Draw SAN label (if not root and zoom is sufficient)
         if node.san and self._viewport.zoom >= 0.5:
-            if is_on_future_path:
+            if is_available_move:
+                text_color = TEXT_AVAILABLE_COLOR
+            elif is_on_future_path:
                 text_color = TEXT_PATH_FADED_COLOR
             elif is_on_path:
                 text_color = TEXT_PATH_COLOR

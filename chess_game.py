@@ -251,6 +251,9 @@ def main():
                     ui_manager.set_window_resolution(
                         (side_panel.get_window_width(), WINDOW_HEIGHT)
                     )
+                    # Notify content AFTER resolution is updated so UI elements
+                    # are created within the valid display area
+                    side_panel.notify_content_visibility()
 
             # Handle side panel events (trie visualization interactions)
             trie_action = side_panel.process_event(event)
@@ -337,9 +340,9 @@ def main():
             board_renderer.rotated,
         )
 
+        side_panel.draw(screen)
         ui_manager.draw_ui(screen)
         control_panel.draw(screen)
-        side_panel.draw(screen)
 
         if promotion_dialog is not None:
             promotion_dialog.draw_pieces(screen)

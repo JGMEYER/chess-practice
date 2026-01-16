@@ -91,12 +91,20 @@ class SidePanel:
         tab_rect = self._get_tab_rect()
         if tab_rect.collidepoint(pos):
             self._expanded = not self._expanded
-            # Notify content of visibility change
-            if self._content is not None:
-                panel_rect = self._get_panel_rect()
-                self._content.set_visible(self._expanded, panel_rect)
+            # Note: content visibility is set by notify_content_visibility()
+            # after window resolution is updated
             return True
         return False
+
+    def notify_content_visibility(self) -> None:
+        """Notify content of current visibility state.
+
+        Call this AFTER updating window resolution to ensure UI elements
+        are created within the valid display area.
+        """
+        if self._content is not None:
+            panel_rect = self._get_panel_rect()
+            self._content.set_visible(self._expanded, panel_rect)
 
     def update_hover(self, pos: tuple[int, int]) -> None:
         """

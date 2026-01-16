@@ -8,6 +8,13 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton
 
+try:
+    from pygame_gui.elements import UICheckBox
+
+    HAS_CHECKBOX = True
+except ImportError:
+    HAS_CHECKBOX = False
+
 from graphics.trie_visualization import TrieVisualization
 
 if TYPE_CHECKING:
@@ -16,6 +23,7 @@ if TYPE_CHECKING:
 
 # Panel layout constants
 CENTER_BUTTON_HEIGHT = 30
+CHECKBOX_HEIGHT = 25
 CENTER_BUTTON_MARGIN = 10
 INFO_PANEL_HEIGHT = 180
 
@@ -28,6 +36,7 @@ class TriePanel:
         self._ui_manager = ui_manager
         self._trie_viz: TrieVisualization | None = None
         self._center_button: UIButton | None = None
+        self._focus_checkbox: UICheckBox | None = None if HAS_CHECKBOX else None
         self._font: pygame.font.Font | None = None
         self._rect: pygame.Rect | None = None
         self._visible = False
@@ -55,10 +64,10 @@ class TriePanel:
         if visible and not self._visible:
             # Becoming visible
             self._rect = rect
-            self._create_center_button()
+            self._create_ui_elements()
         elif not visible and self._visible:
             # Becoming hidden
-            self._destroy_center_button()
+            self._destroy_ui_elements()
             self._rect = None
 
         self._visible = visible
@@ -67,21 +76,22 @@ class TriePanel:
         """Update the panel's rectangle (used when window resizes)."""
         if self._rect != rect:
             self._rect = rect
-            # Recreate button at new position
+            # Recreate UI elements at new position
             if self._visible:
-                self._destroy_center_button()
-                self._create_center_button()
+                self._destroy_ui_elements()
+                self._create_ui_elements()
 
     def _get_viz_rect(self) -> pygame.Rect:
         """Get the rectangle for the trie visualization area."""
         if self._rect is None:
             return pygame.Rect(0, 0, 0, 0)
 
-        viz_y = self._rect.top + CENTER_BUTTON_HEIGHT + CENTER_BUTTON_MARGIN * 2
+        # Account for button + checkbox + margins
+        controls_height = CENTER_BUTTON_HEIGHT + CHECKBOX_HEIGHT + CENTER_BUTTON_MARGIN * 3
+        viz_y = self._rect.top + controls_height
         viz_height = (
             self._rect.height
-            - CENTER_BUTTON_HEIGHT
-            - CENTER_BUTTON_MARGIN * 2
+            - controls_height
             - INFO_PANEL_HEIGHT
         )
         return pygame.Rect(
@@ -103,28 +113,47 @@ class TriePanel:
             INFO_PANEL_HEIGHT - 5,
         )
 
-    def _create_center_button(self) -> None:
-        """Create the center button."""
-        if self._rect is None or self._center_button is not None:
+    def _create_ui_elements(self) -> None:
+        """Create the UI elements (center button and focus checkbox)."""
+        if self._rect is None:
             return
 
-        button_rect = pygame.Rect(
-            self._rect.left + CENTER_BUTTON_MARGIN,
-            self._rect.top + CENTER_BUTTON_MARGIN,
-            self._rect.width - CENTER_BUTTON_MARGIN * 2,
-            CENTER_BUTTON_HEIGHT,
-        )
-        self._center_button = UIButton(
-            relative_rect=button_rect,
-            text="Center",
-            manager=self._ui_manager,
-        )
+        # Create center button
+        if self._center_button is None:
+            button_rect = pygame.Rect(
+                self._rect.left + CENTER_BUTTON_MARGIN,
+                self._rect.top + CENTER_BUTTON_MARGIN,
+                self._rect.width - CENTER_BUTTON_MARGIN * 2,
+                CENTER_BUTTON_HEIGHT,
+            )
+            self._center_button = UIButton(
+                relative_rect=button_rect,
+                text="Center",
+                manager=self._ui_manager,
+            )
 
-    def _destroy_center_button(self) -> None:
-        """Destroy the center button."""
+        # Create focus mode checkbox (if available)
+        if HAS_CHECKBOX and self._focus_checkbox is None:
+            checkbox_rect = pygame.Rect(
+                self._rect.left + CENTER_BUTTON_MARGIN,
+                self._rect.top + CENTER_BUTTON_MARGIN + CENTER_BUTTON_HEIGHT + 5,
+                self._rect.width - CENTER_BUTTON_MARGIN * 2,
+                CHECKBOX_HEIGHT,
+            )
+            self._focus_checkbox = UICheckBox(
+                relative_rect=checkbox_rect,
+                text="Focus Mode",
+                manager=self._ui_manager,
+            )
+
+    def _destroy_ui_elements(self) -> None:
+        """Destroy the UI elements."""
         if self._center_button is not None:
             self._center_button.kill()
             self._center_button = None
+        if self._focus_checkbox is not None:
+            self._focus_checkbox.kill()
+            self._focus_checkbox = None
 
     def process_event(self, event: pygame.event.Event) -> str | None:
         """
@@ -148,6 +177,23 @@ class TriePanel:
             if self._trie_viz:
                 self._trie_viz.center_on_current_position()
             return "trie_center"
+
+        # Handle focus mode checkbox
+        if HAS_CHECKBOX and self._focus_checkbox is not None:
+            if (
+                event.type == pygame_gui.UI_CHECK_BOX_CHECKED
+                and event.ui_element == self._focus_checkbox
+            ):
+                if self._trie_viz:
+                    self._trie_viz.set_focus_mode(True)
+                return None
+            elif (
+                event.type == pygame_gui.UI_CHECK_BOX_UNCHECKED
+                and event.ui_element == self._focus_checkbox
+            ):
+                if self._trie_viz:
+                    self._trie_viz.set_focus_mode(False)
+                return None
 
         # Forward to trie visualization
         if self._trie_viz:
