@@ -614,9 +614,12 @@ class TrieVisualization:
         if clicked_node == self._selected_node:
             # Second click on selected node
             if clicked_node.path_index is not None:
-                # On current path - activate (navigate)
+                # On current path - navigate to that position
                 return f"trie_navigate:{clicked_node.path_index}"
-            # Not on path - deselect
+            elif self._is_available_move(clicked_node):
+                # Available move - play this move
+                return f"trie_play:{clicked_node.san}"
+            # Not on path and not available - deselect
             self._selected_node = None
             return None
 

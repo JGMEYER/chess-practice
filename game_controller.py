@@ -272,6 +272,37 @@ class GameController:
         self.clear_selection()
         self._cancel_ai_thinking()
 
+    def execute_san_move(self, san: str) -> bool:
+        """
+        Execute a move from SAN notation.
+
+        Uses PGNLoader to parse SAN and resolve to move coordinates.
+        Used for playing moves from the opening trie.
+
+        Args:
+            san: Move in Standard Algebraic Notation
+
+        Returns:
+            True if the move was executed successfully, False otherwise
+        """
+        try:
+            loader = PGNLoader(self.board, self.game_state)
+            from_square, to_square, promotion = loader.san_to_move(san)
+
+            self.move_executor.execute_move(from_square, to_square, promotion)
+
+            # Truncate redo history if in middle of game
+            if len(self.san_history) > len(self.game_state.move_history) - 1:
+                self.san_history = self.san_history[: len(self.game_state.move_history) - 1]
+
+            self.san_history.append(san)
+            self._update_current_opening()
+            self.clear_selection()
+            self._cancel_ai_thinking()
+            return True
+        except (PGNError, ValueError):
+            return False
+
     def _generate_san_for_move(
         self,
         from_square: tuple[int, int],

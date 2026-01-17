@@ -266,6 +266,10 @@ def main():
                     game.move_executor.jump_to_history_index(target_index)
                     game.clear_selection()
                     game._update_current_opening()
+                elif trie_action.startswith("trie_play:"):
+                    # Play the specified move (from available moves in trie)
+                    san = trie_action.split(":", 1)[1]
+                    game.execute_san_move(san)
                 # "trie_center" and "trie_select" are handled internally
 
             # Handle mouse motion for side panel hover

@@ -275,3 +275,34 @@ class PGNLoader:
             )
 
         return candidates[0]
+
+    def san_to_move(
+        self, san: str
+    ) -> tuple[tuple[int, int], tuple[int, int], PieceType | None]:
+        """
+        Convert SAN notation to move coordinates.
+
+        Handles castling and disambiguation automatically.
+
+        Args:
+            san: Move in Standard Algebraic Notation
+
+        Returns:
+            Tuple of (from_square, to_square, promotion)
+
+        Raises:
+            PGNError: If the SAN is invalid or ambiguous
+        """
+        clean_san = san.rstrip("+#")
+
+        # Handle castling
+        if clean_san in ("O-O", "O-O-O", "0-0", "0-0-0"):
+            rank = 0 if self.game_state.current_turn == Color.WHITE else 7
+            is_kingside = clean_san in ("O-O", "0-0")
+            return (4, rank), (6 if is_kingside else 2, rank), None
+
+        # Parse regular move and find source square
+        parsed = self._parse_san(san)
+        from_square = self._find_source_square(parsed, san)
+
+        return from_square, parsed["to_square"], parsed.get("promotion")
