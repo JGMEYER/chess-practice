@@ -138,7 +138,7 @@ class TriePanel:
             )
             self._focus_checkbox = UICheckBox(
                 relative_rect=checkbox_pos,
-                text="Hide other lines",
+                text="[F] Hide other lines",
                 manager=self._ui_manager,
                 initial_state=True,  # Focus mode enabled by default
             )
@@ -200,6 +200,13 @@ class TriePanel:
                 return action
 
         return None
+
+    def toggle_focus_mode(self) -> None:
+        """Toggle focus mode (called from keyboard shortcut)."""
+        if self._focus_checkbox is not None and self._trie_viz is not None:
+            new_state = not self._focus_checkbox.is_checked
+            self._focus_checkbox.set_state(new_state)
+            self._trie_viz.set_focus_mode(new_state)
 
     def update_hover(self, pos: tuple[int, int]) -> None:
         """Update hover state based on mouse position."""
