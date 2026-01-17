@@ -22,6 +22,9 @@ if TYPE_CHECKING:
 class ControlPanel:
     """Right sidebar control panel with undo/redo/rotate buttons."""
 
+    # Duration for button press animation (seconds)
+    BUTTON_PRESS_DURATION = 0.1
+
     def __init__(self, manager: pygame_gui.UIManager, icon_loader: IconLoader):
         """
         Initialize the control panel.
@@ -110,6 +113,9 @@ class ControlPanel:
         self._ai_available = True
         self.undo_button.disable()
         self.redo_button.disable()
+
+        # Track button press animations (button -> time remaining)
+        self._button_press_timers: dict[UIButton, float] = {}
 
     def _create_disabled_icon(self, icon: pygame.Surface) -> pygame.Surface:
         """Create a dimmed version of an icon for disabled state."""
@@ -248,3 +254,39 @@ class ControlPanel:
             elif event.ui_element == self.ai_button:
                 return "toggle_ai"
         return None
+
+    def trigger_button_press(self, action: str) -> None:
+        """
+        Trigger a button press animation for the given action.
+
+        Args:
+            action: The action whose button to animate ("undo" or "redo")
+        """
+        button = None
+        if action == "undo" and self._undo_available:
+            button = self.undo_button
+        elif action == "redo" and self._redo_available:
+            button = self.redo_button
+
+        if button is not None:
+            button._set_active()
+            self._button_press_timers[button] = self.BUTTON_PRESS_DURATION
+
+    def update(self, time_delta: float) -> None:
+        """
+        Update button press animation timers.
+
+        Args:
+            time_delta: Time elapsed since last update (seconds)
+        """
+        buttons_to_release = []
+        for button, time_remaining in self._button_press_timers.items():
+            new_time = time_remaining - time_delta
+            if new_time <= 0:
+                buttons_to_release.append(button)
+            else:
+                self._button_press_timers[button] = new_time
+
+        for button in buttons_to_release:
+            button._set_inactive()
+            del self._button_press_timers[button]

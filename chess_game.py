@@ -213,6 +213,15 @@ def main():
                 elif control_action == "toggle_ai":
                     game.toggle_ai_mode()
 
+                # Handle keyboard shortcuts for undo/redo
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_a:
+                        control_panel.trigger_button_press("undo")
+                        game.undo()
+                    elif event.key == pygame.K_d:
+                        control_panel.trigger_button_press("redo")
+                        game.redo()
+
             # Handle board clicks
             all_dialogs_closed = (
                 fen_dialog is None
@@ -294,6 +303,7 @@ def main():
 
         # Update UI
         ui_manager.update(time_delta)
+        control_panel.update(time_delta)
         control_panel.update_button_states(
             game.game_state.can_undo(), game.game_state.can_redo()
         )
