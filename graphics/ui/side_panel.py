@@ -104,6 +104,10 @@ class SidePanel:
         self._expanded = expanded
         self._notify_content_visibility()
 
+    def toggle(self) -> None:
+        """Toggle the panel's expanded state."""
+        self.set_expanded(not self._expanded)
+
     def _notify_content_visibility(self) -> None:
         """Notify content of current visibility state."""
         if self._content is not None:

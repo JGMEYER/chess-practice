@@ -216,7 +216,7 @@ def main():
                 elif control_action == "toggle_ai":
                     game.toggle_ai_mode()
 
-                # Handle keyboard shortcuts for undo/redo/focus
+                # Handle keyboard shortcuts for undo/redo/focus/panel toggle
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_a:
                         control_panel.trigger_button_press("undo")
@@ -226,6 +226,14 @@ def main():
                         game.redo()
                     elif event.key == pygame.K_f:
                         trie_panel.toggle_focus_mode()
+                    elif event.key == pygame.K_TAB:
+                        side_panel.toggle()
+                        screen = pygame.display.set_mode(
+                            (side_panel.get_window_width(), WINDOW_HEIGHT)
+                        )
+                        ui_manager.set_window_resolution(
+                            (side_panel.get_window_width(), WINDOW_HEIGHT)
+                        )
 
             # Handle board clicks
             all_dialogs_closed = (
