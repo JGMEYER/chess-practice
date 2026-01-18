@@ -4,6 +4,7 @@ import pygame
 
 from chess.board import Board
 from graphics.piece_renderer import PieceRenderer
+from graphics.arrow_renderer import ArrowRenderer
 
 from .constants import (
     LIGHT_SQUARE,
@@ -27,12 +28,13 @@ from .constants import (
 
 
 class BoardRenderer:
-    """Renders the chess board squares and labels."""
+    """Renders the chess board squares, labels, pieces, arrows, and move indicators."""
 
     def __init__(self, piece_renderer: PieceRenderer):
         """Initialize the board renderer."""
         self._font: pygame.font.Font | None = None
         self._piece_renderer = piece_renderer
+        self._arrow_renderer = ArrowRenderer()
         self._rotated = False
 
     @property
@@ -43,6 +45,17 @@ class BoardRenderer:
     def toggle_rotation(self) -> None:
         """Toggle the board orientation (rotate 180 degrees)."""
         self._rotated = not self._rotated
+        self._arrow_renderer.rotated = self._rotated
+
+    def set_arrows(self, arrows: list[tuple[tuple[int, int], tuple[int, int]]]) -> None:
+        """Set the arrows to display on the board.
+
+        Args:
+            arrows: List of (from_square, to_square) tuples
+        """
+        self._arrow_renderer.clear()
+        for from_sq, to_sq in arrows:
+            self._arrow_renderer.add_arrow(from_sq, to_sq)
 
     def _ensure_font(self) -> None:
         """Initialize the font if not already done."""
@@ -179,13 +192,20 @@ class BoardRenderer:
         is_checkmate: bool = False,
     ) -> None:
         """
-        Draw the complete board with labels and highlights.
+        Draw the complete board with all elements.
+
+        Rendering order:
+        1. Board squares and highlights
+        2. Labels
+        3. Pieces
+        4. Arrows (from set_arrows)
+        5. Valid move circles (on top of arrows)
 
         Args:
             surface: The pygame surface to draw on
             board: The board with piece positions
             selected_square: Optional (file, rank) of selected square
-            valid_moves: Optional list of valid move squares to highlight
+            valid_moves: Optional list of valid move squares to show as dots
             last_move_squares: Optional (from_square, to_square) of last move to highlight
             check_square: Optional (file, rank) of king in check to highlight
             is_checkmate: Whether the game is in checkmate (uses red instead of amber)
@@ -194,5 +214,6 @@ class BoardRenderer:
         self.draw_board(surface, selected_square, last_move_squares, check_square, is_checkmate)
         self.draw_labels(surface)
         self._piece_renderer.draw_pieces(surface, board, self._rotated)
+        self._arrow_renderer.draw(surface)
         if valid_moves:
             self.draw_valid_moves(surface, valid_moves)

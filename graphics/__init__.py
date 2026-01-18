@@ -5,7 +5,6 @@ from .icon_loader import IconLoader
 from .captured_pieces_renderer import CapturedPiecesRenderer
 from .move_list_renderer import MoveListRenderer
 from .opening_renderer import OpeningRenderer
-from .arrow_renderer import ArrowRenderer
 
 __all__ = [
     "BoardRenderer",
@@ -15,5 +14,4 @@ __all__ = [
     "CapturedPiecesRenderer",
     "MoveListRenderer",
     "OpeningRenderer",
-    "ArrowRenderer",
 ]

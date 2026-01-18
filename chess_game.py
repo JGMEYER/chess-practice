@@ -12,7 +12,6 @@ from graphics import (
     CapturedPiecesRenderer,
     MoveListRenderer,
     OpeningRenderer,
-    ArrowRenderer,
 )
 from graphics.ui import (
     MenuBar,
@@ -86,7 +85,6 @@ def main():
     # Initialize renderers
     piece_renderer = PieceRenderer(sprite_loader)
     board_renderer = BoardRenderer(piece_renderer)
-    arrow_renderer = ArrowRenderer()
 
     captured_renderer = CapturedPiecesRenderer(sprite_loader)
     move_list_renderer = MoveListRenderer()
@@ -315,11 +313,12 @@ def main():
         trie_panel.update(game.san_history, game.current_move_count)
 
         # Update arrows based on available moves in focus mode
-        arrow_renderer.clear()
+        arrows = []
         for san in trie_panel.get_available_moves():
             squares = game.san_to_squares(san)
             if squares:
-                arrow_renderer.add_arrow(squares[0], squares[1])
+                arrows.append(squares)
+        board_renderer.set_arrows(arrows)
 
         # Update UI
         ui_manager.update(time_delta)
@@ -335,7 +334,7 @@ def main():
         if last_move:
             last_move_squares = (last_move.from_square, last_move.to_square)
 
-        # Draw
+        # Draw board (includes arrows and valid move circles in correct order)
         board_renderer.draw(
             screen,
             game.board,
@@ -345,10 +344,6 @@ def main():
             game.check_square,
             game.is_checkmate,
         )
-
-        # Draw arrows on top of board
-        arrow_renderer.rotated = board_renderer.rotated
-        arrow_renderer.draw(screen)
 
         # Draw sidebar
         sidebar_rect = pygame.Rect(SIDEBAR_X, SIDEBAR_Y, SIDEBAR_WIDTH, BOARD_PIXEL_SIZE)
