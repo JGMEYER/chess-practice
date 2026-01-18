@@ -96,11 +96,6 @@ def main():
     trie_panel = TriePanel(ui_manager)
     side_panel = SidePanel(content=trie_panel, expanded=False)
 
-    # Expand side panel by default
-    side_panel.set_expanded(True)
-    screen = pygame.display.set_mode((side_panel.get_window_width(), WINDOW_HEIGHT))
-    ui_manager.set_window_resolution((side_panel.get_window_width(), WINDOW_HEIGHT))
-
     # Dialog state
     fen_dialog: FENDialog | None = None
     pgn_dialog: PGNDialog | None = None
@@ -111,8 +106,14 @@ def main():
     # Initialize game controller
     game = GameController()
 
-    # Initialize trie visualization with the opening trie
-    trie_panel.set_trie(game.opening_trie.root)
+    # Initialize trie visualization with the opening trie (pass trie for filter queries)
+    # Must be done BEFORE expanding side panel so dropdowns have opening data
+    trie_panel.set_trie(game.opening_trie.root, game.opening_trie)
+
+    # Expand side panel by default
+    side_panel.set_expanded(True)
+    screen = pygame.display.set_mode((side_panel.get_window_width(), WINDOW_HEIGHT))
+    ui_manager.set_window_resolution((side_panel.get_window_width(), WINDOW_HEIGHT))
 
     clock = pygame.time.Clock()
     running = True
@@ -290,6 +291,10 @@ def main():
                     # Play the specified move (from available moves in trie)
                     san = trie_action.split(":", 1)[1]
                     game.execute_san_move(san)
+                elif trie_action == "reset_board":
+                    # Filter was applied, reset board to starting position
+                    game.reset()
+                    move_list_renderer.reset_scroll()
                 # "trie_center" and "trie_select" are handled internally
 
             # Handle mouse motion for side panel hover

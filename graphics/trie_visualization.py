@@ -10,7 +10,7 @@ import pygame
 from graphics import aa_draw
 
 if TYPE_CHECKING:
-    from chess.patterns.openings import TrieNode
+    from chess.patterns.openings import Opening, TrieNode
 
 
 # Layout constants
@@ -310,6 +310,7 @@ class TrieVisualization:
     """Renders the trie visualization with pan/zoom support."""
 
     def __init__(self, trie_root: TrieNode) -> None:
+        self._trie_root = trie_root  # Keep reference for filtering
         self._layout = TrieLayout()
         self._layout.compute_layout(trie_root)
         self._viewport = Viewport()
@@ -324,6 +325,9 @@ class TrieVisualization:
         self._rect: pygame.Rect | None = None
         self._focus_mode = True  # Focus mode enabled by default
         self._focus_positions: dict[TrieLayoutNode, tuple[float, float]] = {}
+        # Opening/variation filter
+        self._filter_opening: str | None = None
+        self._filter_variation: str | None = None
 
         # Center on root initially
         if self._layout.root:
@@ -338,6 +342,80 @@ class TrieVisualization:
     @property
     def selected_node(self) -> TrieLayoutNode | None:
         return self._selected_node
+
+    @property
+    def filter_opening(self) -> str | None:
+        """Currently applied opening filter."""
+        return self._filter_opening
+
+    @property
+    def filter_variation(self) -> str | None:
+        """Currently applied variation filter."""
+        return self._filter_variation
+
+    def set_opening_filter(
+        self, opening_name: str | None, variation_name: str | None
+    ) -> None:
+        """Filter trie to only show nodes matching the opening/variation.
+
+        Args:
+            opening_name: Opening name to filter by, or None to clear filter.
+            variation_name: Variation name to filter by (requires opening_name).
+        """
+        self._filter_opening = opening_name
+        self._filter_variation = variation_name if opening_name else None
+
+        # Clear selection if it's not visible after filtering
+        if self._selected_node and not self._node_matches_filter(self._selected_node):
+            self._selected_node = None
+
+        # If filter is active, rebuild focus layout
+        if self._focus_mode:
+            self._compute_focus_layout()
+            self._zoom_to_fit_focus()
+        self.center_on_root()
+
+    def clear_opening_filter(self) -> None:
+        """Clear the opening/variation filter."""
+        self.set_opening_filter(None, None)
+
+    def _node_matches_filter(self, node: TrieLayoutNode) -> bool:
+        """Check if a node matches the current opening/variation filter.
+
+        A node matches if any of its openings match the filter criteria.
+        """
+        if self._filter_opening is None:
+            return True  # No filter, all nodes match
+
+        # Check if any opening in this node matches
+        for opening in node.trie_node.openings:
+            if opening.opening_name == self._filter_opening:
+                if self._filter_variation is None:
+                    return True  # Opening matches, no variation filter
+                if opening.variation_name == self._filter_variation:
+                    return True  # Both opening and variation match
+
+        return False
+
+    def _node_is_on_filter_path(self, node: TrieLayoutNode) -> bool:
+        """Check if a node is on a path to any matching node.
+
+        A node should be visible if it's an ancestor of a matching node.
+        This is checked recursively through children.
+        """
+        if self._filter_opening is None:
+            return True  # No filter
+
+        # If this node matches, it's on the path
+        if self._node_matches_filter(node):
+            return True
+
+        # Check if any child (recursively) matches
+        for child in node.children:
+            if self._node_is_on_filter_path(child):
+                return True
+
+        return False
 
     def select_current_position(self) -> None:
         """Select the node at the current active position."""
@@ -413,9 +491,11 @@ class TrieVisualization:
             child_y = active_y - VERTICAL_SPACING
 
             # Get non-path children only (path child is already in vertical layout)
+            # Also filter by opening filter if active
             available_children = [
                 child for child in active_node.children
                 if child.path_index is None
+                and (self._filter_opening is None or self._node_is_on_filter_path(child))
             ]
 
             # Spread all children (path + non-path) horizontally, centered around x=0
@@ -468,13 +548,24 @@ class TrieVisualization:
         return None
 
     def _is_visible_in_focus_mode(self, node: TrieLayoutNode) -> bool:
-        """Check if node should be visible in focus mode."""
+        """Check if node should be visible in focus mode.
+
+        Visibility depends on both focus mode rules and filter rules.
+        """
+        # First check filter - if node is not on a filter path, it's hidden
+        if self._filter_opening is not None:
+            if not self._node_is_on_filter_path(node):
+                return False
+
         # Show all nodes on the path (past and future)
         if node.path_index is not None:
             return True
-        # Show immediate children of the active node
+        # Show immediate children of the active node (if they pass filter)
         active_node = self._get_active_node()
         if active_node and node.parent == active_node:
+            # In filter mode, only show children that are on filter path
+            if self._filter_opening is not None:
+                return self._node_is_on_filter_path(node)
             return True
         return False
 

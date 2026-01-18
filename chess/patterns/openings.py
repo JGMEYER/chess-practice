@@ -138,6 +138,50 @@ class OpeningTrie:
 
         return result
 
+    def get_all_openings(self) -> list[str]:
+        """Get sorted list of unique opening names in the trie.
+
+        Returns:
+            Alphabetically sorted list of opening names (e.g., "Sicilian Defense").
+        """
+        openings: set[str] = set()
+        self._collect_openings(self._root, openings)
+        return sorted(openings)
+
+    def _collect_openings(self, node: TrieNode, openings: set[str]) -> None:
+        """Recursively collect opening names from all nodes."""
+        for opening in node.openings:
+            if not opening.is_book_move:
+                openings.add(opening.opening_name)
+        for child in node.children.values():
+            self._collect_openings(child, openings)
+
+    def get_variations_for_opening(self, opening_name: str) -> list[str]:
+        """Get sorted list of variation names for a specific opening.
+
+        Args:
+            opening_name: The opening name to get variations for.
+
+        Returns:
+            Alphabetically sorted list of variation names (excluding None).
+        """
+        variations: set[str] = set()
+        self._collect_variations(self._root, opening_name, variations)
+        return sorted(variations)
+
+    def _collect_variations(
+        self, node: TrieNode, opening_name: str, variations: set[str]
+    ) -> None:
+        """Recursively collect variation names for a specific opening."""
+        for opening in node.openings:
+            if (
+                opening.opening_name == opening_name
+                and opening.variation_name is not None
+            ):
+                variations.add(opening.variation_name)
+        for child in node.children.values():
+            self._collect_variations(child, opening_name, variations)
+
     @classmethod
     def from_csv(cls, path: Path) -> OpeningTrie:
         """Load openings from CSV and build trie."""

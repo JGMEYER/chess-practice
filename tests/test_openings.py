@@ -131,3 +131,55 @@ class TestOpeningTrie:
         assert result is not None
         assert result.is_book_move is False
         assert result.opening_name == "Sicilian Defense"
+
+    def test_get_all_openings(self, trie: OpeningTrie) -> None:
+        """Test getting all unique opening names from the trie."""
+        openings = trie.get_all_openings()
+        # Should be sorted alphabetically
+        assert openings == sorted(openings)
+        # Should contain expected openings from test fixture
+        assert "Sicilian Defense" in openings
+        assert "Italian Game" in openings
+        assert "French Defense" in openings
+        assert "Albin Countergambit" in openings
+        # Should not contain Book Move
+        assert BOOK_MOVE not in openings
+
+    def test_get_all_openings_empty_trie(self) -> None:
+        """Test getting openings from an empty trie."""
+        trie = OpeningTrie()
+        assert trie.get_all_openings() == []
+
+    def test_get_variations_for_opening(self, trie: OpeningTrie) -> None:
+        """Test getting variations for a specific opening."""
+        # Sicilian Defense has Dragon Variation in our test fixture
+        variations = trie.get_variations_for_opening("Sicilian Defense")
+        assert "Dragon Variation" in variations
+
+    def test_get_variations_for_opening_sorted(self, trie: OpeningTrie) -> None:
+        """Test that variations are returned sorted alphabetically."""
+        variations = trie.get_variations_for_opening("Sicilian Defense")
+        assert variations == sorted(variations)
+
+    def test_get_variations_for_opening_none_excluded(self) -> None:
+        """Test that None variations are excluded from the list."""
+        trie = OpeningTrie()
+        trie.insert(["e4", "c5"], "Sicilian Defense", None)
+        trie.insert(["e4", "c5", "Nf3"], "Sicilian Defense", "Open")
+
+        variations = trie.get_variations_for_opening("Sicilian Defense")
+        assert "Open" in variations
+        assert None not in variations
+
+    def test_get_variations_for_nonexistent_opening(self, trie: OpeningTrie) -> None:
+        """Test getting variations for an opening that doesn't exist."""
+        variations = trie.get_variations_for_opening("Nonexistent Opening")
+        assert variations == []
+
+    def test_get_variations_for_opening_no_variations(self) -> None:
+        """Test getting variations for an opening with no named variations."""
+        trie = OpeningTrie()
+        trie.insert(["e4", "e5"], "Italian Game", None)
+
+        variations = trie.get_variations_for_opening("Italian Game")
+        assert variations == []

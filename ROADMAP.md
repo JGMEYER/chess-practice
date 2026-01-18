@@ -15,3 +15,4 @@
 - [x] Special checkmate state
 - [x] Opening trie structure (with opening_name + variation_name)
 - [x] Fix opening data conflicts (early moves mapped to wrong openings)
+- [x] Opening/variation filter dropdowns for focused trie training

@@ -2,12 +2,24 @@
     "UIDropDownMenu": {
         "misc": {
             "expand_direction": "down",
-            "open_button_width": "0"
+            "open_button_width": "20"
+        }
+    },
+    "drop_down_menu.#selected_option": {
+        "misc": {
+            "text_horiz_alignment": "left",
+            "text_horiz_alignment_padding": "8"
         }
     },
     "UISelectionList": {
         "misc": {
             "list_item_height": "25"
+        }
+    },
+    "selection_list.button": {
+        "misc": {
+            "text_horiz_alignment": "left",
+            "text_horiz_alignment_padding": "8"
         }
     },
     "#dropdown_panel": {
