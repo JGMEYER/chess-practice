@@ -34,6 +34,7 @@ DROPDOWN_HEIGHT = 28
 BUTTON_WIDTH = 60
 FILTER_MARGIN = 5
 MIN_DROPDOWN_WIDTH = 150
+MAX_DROPDOWN_WIDTH = 250  # Maximum width to ensure buttons fit on screen
 DROPDOWN_PADDING = 40  # Extra padding for dropdown arrow and margins
 
 
@@ -104,12 +105,14 @@ class TriePanel:
                 text_width = measure_font.size(variation)[0]
                 max_variation_width = max(max_variation_width, text_width)
 
-        # Add padding and enforce minimum width
-        self._opening_dropdown_width = max(
-            MIN_DROPDOWN_WIDTH, max_opening_width + DROPDOWN_PADDING
+        # Add padding and enforce min/max width constraints
+        self._opening_dropdown_width = min(
+            MAX_DROPDOWN_WIDTH,
+            max(MIN_DROPDOWN_WIDTH, max_opening_width + DROPDOWN_PADDING)
         )
-        self._variation_dropdown_width = max(
-            MIN_DROPDOWN_WIDTH, max_variation_width + DROPDOWN_PADDING
+        self._variation_dropdown_width = min(
+            MAX_DROPDOWN_WIDTH,
+            max(MIN_DROPDOWN_WIDTH, max_variation_width + DROPDOWN_PADDING)
         )
 
     def update(self, san_history: list[str], current_move_count: int) -> None:
