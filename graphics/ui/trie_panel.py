@@ -208,6 +208,30 @@ class TriePanel:
             self._focus_checkbox.set_state(new_state)
             self._trie_viz.set_focus_mode(new_state)
 
+    def get_available_moves(self) -> list[str]:
+        """Get SAN moves available from the current active node in focus mode.
+
+        Returns:
+            List of SAN move strings for all children of active node.
+            Empty list if not visible, not in focus mode, or no active node.
+        """
+        if not self._visible:
+            return []
+
+        if self._trie_viz is None or not self._trie_viz._focus_mode:
+            return []
+
+        active_node = self._trie_viz._get_active_node()
+        if active_node is None:
+            return []
+
+        # Get all children (including previously traversed ones)
+        return [
+            child.san
+            for child in active_node.children
+            if child.san is not None
+        ]
+
     def update_hover(self, pos: tuple[int, int]) -> None:
         """Update hover state based on mouse position."""
         if not self._visible or self._trie_viz is None:

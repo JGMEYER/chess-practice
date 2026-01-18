@@ -306,6 +306,13 @@ def main():
         # Update trie visualization with current game state
         trie_panel.update(game.san_history, game.current_move_count)
 
+        # Update arrows based on available moves in focus mode
+        arrow_renderer.clear()
+        for san in trie_panel.get_available_moves():
+            squares = game.san_to_squares(san)
+            if squares:
+                arrow_renderer.add_arrow(squares[0], squares[1])
+
         # Update UI
         ui_manager.update(time_delta)
         control_panel.update(time_delta)

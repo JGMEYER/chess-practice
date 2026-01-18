@@ -303,6 +303,24 @@ class GameController:
         except (PGNError, ValueError):
             return False
 
+    def san_to_squares(
+        self, san: str
+    ) -> tuple[tuple[int, int], tuple[int, int]] | None:
+        """Convert SAN notation to from/to squares.
+
+        Args:
+            san: Move in Standard Algebraic Notation
+
+        Returns:
+            Tuple of (from_square, to_square) or None if invalid
+        """
+        try:
+            loader = PGNLoader(self.board, self.game_state)
+            from_square, to_square, _ = loader.san_to_move(san)
+            return from_square, to_square
+        except (PGNError, ValueError):
+            return None
+
     def _generate_san_for_move(
         self,
         from_square: tuple[int, int],
