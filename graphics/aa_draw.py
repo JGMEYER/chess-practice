@@ -75,3 +75,43 @@ def line(
 
     pygame.gfxdraw.filled_polygon(surface, points, color)
     pygame.gfxdraw.aapolygon(surface, points, color)
+
+
+def polygon(
+    surface: pygame.Surface,
+    points: list[tuple[float, float]],
+    color: tuple[int, int, int] | tuple[int, int, int, int],
+) -> None:
+    """Draw a filled anti-aliased polygon.
+
+    Args:
+        surface: Surface to draw on
+        points: List of (x, y) vertices
+        color: Fill color (RGB or RGBA)
+    """
+    if len(points) < 3:
+        return
+
+    # Fill the polygon
+    pygame.gfxdraw.filled_polygon(surface, points, color)
+
+    # Draw AA outline
+    pygame.gfxdraw.aapolygon(surface, points, color)
+
+
+def polygon_outline(
+    surface: pygame.Surface,
+    points: list[tuple[float, float]],
+    color: tuple[int, int, int] | tuple[int, int, int, int],
+) -> None:
+    """Draw an anti-aliased polygon outline (no fill).
+
+    Args:
+        surface: Surface to draw on
+        points: List of (x, y) vertices
+        color: Outline color (RGB or RGBA)
+    """
+    if len(points) < 3:
+        return
+
+    pygame.gfxdraw.aapolygon(surface, points, color)

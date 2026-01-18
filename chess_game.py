@@ -12,6 +12,7 @@ from graphics import (
     CapturedPiecesRenderer,
     MoveListRenderer,
     OpeningRenderer,
+    ArrowRenderer,
 )
 from graphics.ui import (
     MenuBar,
@@ -85,6 +86,8 @@ def main():
     # Initialize renderers
     piece_renderer = PieceRenderer(sprite_loader)
     board_renderer = BoardRenderer(piece_renderer)
+    arrow_renderer = ArrowRenderer()
+
     captured_renderer = CapturedPiecesRenderer(sprite_loader)
     move_list_renderer = MoveListRenderer()
     opening_renderer = OpeningRenderer(ui_manager)
@@ -327,6 +330,10 @@ def main():
             game.check_square,
             game.is_checkmate,
         )
+
+        # Draw arrows on top of board
+        arrow_renderer.rotated = board_renderer.rotated
+        arrow_renderer.draw(screen)
 
         # Draw sidebar
         sidebar_rect = pygame.Rect(SIDEBAR_X, SIDEBAR_Y, SIDEBAR_WIDTH, BOARD_PIXEL_SIZE)
