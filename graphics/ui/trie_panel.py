@@ -208,7 +208,7 @@ class TriePanel:
             )
             self._center_button = UIButton(
                 relative_rect=button_rect,
-                text="Center",
+                text="[C] Center",
                 manager=self._ui_manager,
             )
 
@@ -509,6 +509,11 @@ class TriePanel:
             new_state = not self._focus_checkbox.is_checked
             self._focus_checkbox.set_state(new_state)
             self._trie_viz.set_focus_mode(new_state)
+
+    def center(self) -> None:
+        """Center on current position (called from keyboard shortcut)."""
+        if self._trie_viz is not None:
+            self._trie_viz.center_on_current_position()
 
     def get_available_moves(self) -> list[str]:
         """Get SAN moves available from the current active node in focus mode.
