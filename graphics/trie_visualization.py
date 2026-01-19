@@ -638,13 +638,24 @@ class TrieVisualization:
                 self._zoom_to_fit_focus()
 
     def center_on_current_position(self) -> None:
-        """Center viewport on the current active node (at current_move_count)."""
-        if self._current_path and self._current_move_count < len(self._current_path):
-            # Center on the active node, not the end of the path
+        """Center viewport on the current active node (at current_move_count).
+
+        If we've played past the known opening book (off-book), center on the
+        last known node in the path instead.
+        """
+        if not self._current_path:
+            return
+
+        if self._current_move_count < len(self._current_path):
+            # Center on the active node within the known path
             active_node = self._current_path[self._current_move_count]
-            x, y = self._get_node_position(active_node)
-            self._viewport.offset_x = x
-            self._viewport.offset_y = y
+        else:
+            # We're off-book - center on the last known node in the path
+            active_node = self._current_path[-1]
+
+        x, y = self._get_node_position(active_node)
+        self._viewport.offset_x = x
+        self._viewport.offset_y = y
 
     def center_on_root(self) -> None:
         """Center viewport on the root node."""
