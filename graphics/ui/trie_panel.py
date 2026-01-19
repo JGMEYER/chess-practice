@@ -34,7 +34,8 @@ DROPDOWN_HEIGHT = 28
 BUTTON_WIDTH = 60
 FILTER_MARGIN = 5
 MIN_DROPDOWN_WIDTH = 150
-MAX_DROPDOWN_WIDTH = 250  # Maximum width to ensure buttons fit on screen
+MAX_OPENING_DROPDOWN_WIDTH = 350  # Max for opening names
+MAX_VARIATION_DROPDOWN_WIDTH = 380  # Max for variation names (longer)
 DROPDOWN_PADDING = 40  # Extra padding for dropdown arrow and margins
 
 
@@ -107,11 +108,11 @@ class TriePanel:
 
         # Add padding and enforce min/max width constraints
         self._opening_dropdown_width = min(
-            MAX_DROPDOWN_WIDTH,
+            MAX_OPENING_DROPDOWN_WIDTH,
             max(MIN_DROPDOWN_WIDTH, max_opening_width + DROPDOWN_PADDING)
         )
         self._variation_dropdown_width = min(
-            MAX_DROPDOWN_WIDTH,
+            MAX_VARIATION_DROPDOWN_WIDTH,
             max(MIN_DROPDOWN_WIDTH, max_variation_width + DROPDOWN_PADDING)
         )
 
