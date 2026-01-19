@@ -23,6 +23,7 @@ from graphics.ui import (
     PGNDialog,
     SidePanel,
     TriePanel,
+    SettingsDialog,
 )
 from graphics.constants import (
     BOARD_PIXEL_SIZE,
@@ -100,6 +101,7 @@ def main():
     fen_dialog: FENDialog | None = None
     pgn_dialog: PGNDialog | None = None
     credits_dialog: CreditsDialog | None = None
+    settings_dialog: SettingsDialog | None = None
     promotion_dialog: PromotionDialog | None = None
     pending_promotion: tuple[int, int] | None = None  # Target square for promotion
 
@@ -142,6 +144,10 @@ def main():
                 move_list_renderer.reset_scroll()
             elif action == "show_credits":
                 credits_dialog = CreditsDialog(ui_manager, (WINDOW_WIDTH, WINDOW_HEIGHT))
+            elif action == "show_settings":
+                settings_dialog = SettingsDialog(
+                    ui_manager, (WINDOW_WIDTH, WINDOW_HEIGHT), game.ai_elo
+                )
 
             # Handle FEN dialog
             if fen_dialog is not None and event.type == pygame_gui.UI_BUTTON_PRESSED:
@@ -181,6 +187,16 @@ def main():
                     credits_dialog.kill()
                     credits_dialog = None
 
+            # Handle settings dialog
+            if settings_dialog is not None and event.type == pygame_gui.UI_BUTTON_PRESSED:
+                if event.ui_element == settings_dialog.ok_button:
+                    game.set_ai_elo(settings_dialog.get_elo())
+                    settings_dialog.kill()
+                    settings_dialog = None
+                elif event.ui_element == settings_dialog.cancel_button:
+                    settings_dialog.kill()
+                    settings_dialog = None
+
             # Handle window close events
             if event.type == pygame_gui.UI_WINDOW_CLOSE:
                 if fen_dialog is not None and event.ui_element == fen_dialog:
@@ -189,6 +205,8 @@ def main():
                     pgn_dialog = None
                 if credits_dialog is not None and event.ui_element == credits_dialog:
                     credits_dialog = None
+                if settings_dialog is not None and event.ui_element == settings_dialog:
+                    settings_dialog = None
                 if promotion_dialog is not None and event.ui_element == promotion_dialog:
                     promotion_dialog = None
                     pending_promotion = None
@@ -239,6 +257,7 @@ def main():
                 fen_dialog is None
                 and pgn_dialog is None
                 and credits_dialog is None
+                and settings_dialog is None
                 and promotion_dialog is None
             )
             if (

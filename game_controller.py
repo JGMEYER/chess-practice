@@ -91,6 +91,18 @@ class GameController:
         return self._opening_trie
 
     @property
+    def ai_elo(self) -> int:
+        """Get the current AI Elo rating."""
+        if self._ai_player is not None:
+            return self._ai_player.elo
+        return self._config.ai.elo
+
+    def set_ai_elo(self, elo: int) -> None:
+        """Set the AI Elo rating."""
+        if self._ai_player is not None:
+            self._ai_player.set_elo(elo)
+
+    @property
     def current_move_count(self) -> int:
         """Current position in move history (0 = starting, 1 = after first move)."""
         return len(self.game_state.move_history)

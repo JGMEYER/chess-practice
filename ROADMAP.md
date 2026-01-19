@@ -6,6 +6,7 @@
 - [x] Flip board
 - [x] Pawn promotion
 - [x] AI move integration
+- [x] AI difficulty slider (300-2000 Elo)
 - [x] Export PGN
 - [x] Export FEN
 - [ ] Refactor, move UI constants into ui/constants.py

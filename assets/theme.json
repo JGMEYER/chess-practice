@@ -120,5 +120,36 @@
             "normal_border": "#4A4845",
             "hovered_border": "#5A5855"
         }
+    },
+    "#settings_dialog": {
+        "misc": {
+            "enable_title_bar": "1",
+            "draggable": "0"
+        },
+        "colours": {
+            "dark_bg": "#3C3A37",
+            "normal_border": "#4A4845"
+        }
+    },
+    "#elo_slider": {
+        "colours": {
+            "normal_bg": "#302E2B",
+            "dark_bg": "#302E2B",
+            "normal_border": "#4A4845",
+            "hovered_border": "#5A5855"
+        }
+    },
+    "#elo_value_label": {
+        "font": {
+            "bold": "1"
+        },
+        "colours": {
+            "normal_text": "#FFFFFF"
+        }
+    },
+    "#difficulty_description": {
+        "colours": {
+            "normal_text": "#AAAAAA"
+        }
     }
 }

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import random
 import shutil
 from typing import TYPE_CHECKING
 
@@ -50,7 +51,9 @@ class AIPlayer:
 
         try:
             self.engine = Stockfish(path=stockfish_path)
-            self.engine.set_elo_rating(self.elo)
+            # Note: We don't use Stockfish's built-in UCI_Elo because its minimum
+            # is 1320. Instead we handle skill levels in _select_move_by_skill()
+            # using MultiPV + evaluation noise.
         except StockfishException as e:
             raise AIPlayerError(f"Failed to initialize Stockfish: {e}")
 
@@ -72,11 +75,22 @@ class AIPlayer:
 
         return None
 
+    # Skill system constants
+    MIN_ELO = 300
+    MAX_ELO = 2000
+    # Noise sigma at MIN_ELO (in centipawns) - higher = more random
+    MAX_SIGMA = 400
+    # Number of top moves to consider for skill-adjusted selection
+    NUM_CANDIDATE_MOVES = 5
+
     def get_move(
         self, fen: str, think_time_ms: int | None = None
     ) -> tuple[tuple[int, int], tuple[int, int], PieceType | None]:
         """
-        Get the best move for the given position.
+        Get a move for the given position, adjusted for skill level.
+
+        At high Elo (2000), always returns the best move.
+        At lower Elo, adds noise to move evaluations to simulate weaker play.
 
         Args:
             fen: FEN string representing the current position.
@@ -95,14 +109,87 @@ class AIPlayer:
 
         try:
             self.engine.set_fen_position(fen)
-            uci_move = self.engine.get_best_move_time(think_time_ms)
+
+            # Get top N candidate moves with evaluations
+            top_moves = self.engine.get_top_moves(self.NUM_CANDIDATE_MOVES)
+
+            if not top_moves:
+                raise AIPlayerError("Engine returned no moves (game may be over)")
+
+            # Select move based on skill level
+            uci_move = self._select_move_by_skill(top_moves)
+
         except StockfishException as e:
             raise AIPlayerError(f"Engine error: {e}")
 
-        if uci_move is None:
-            raise AIPlayerError("Engine returned no move (game may be over)")
-
         return self._parse_uci_move(uci_move)
+
+    def _select_move_by_skill(self, top_moves: list[dict]) -> str:
+        """
+        Select a move from candidates based on skill level.
+
+        At max Elo, always picks the best move.
+        At lower Elo, adds Gaussian noise to evaluations and picks the
+        move with the best noisy score.
+
+        Args:
+            top_moves: List of move dicts from stockfish.get_top_moves().
+                       Each dict has 'Move', 'Centipawn', and 'Mate' keys.
+
+        Returns:
+            UCI move string of the selected move.
+        """
+        # At max skill, just return the best move
+        if self.elo >= self.MAX_ELO:
+            return top_moves[0]["Move"]
+
+        # Calculate noise based on Elo
+        sigma = self._elo_to_sigma(self.elo)
+
+        # Score each move with noise
+        candidates = []
+        for move_info in top_moves:
+            # Get centipawn score (handle mate scores)
+            if move_info["Mate"] is not None:
+                # Mate in N moves - use large value
+                mate_moves = move_info["Mate"]
+                # Positive mate = we're winning, negative = losing
+                base_score = 10000 - abs(mate_moves) * 10
+                if mate_moves < 0:
+                    base_score = -base_score
+            elif move_info["Centipawn"] is not None:
+                base_score = move_info["Centipawn"]
+            else:
+                # No evaluation available, skip
+                continue
+
+            # Add Gaussian noise
+            noisy_score = base_score + random.gauss(0, sigma)
+            candidates.append((move_info["Move"], noisy_score))
+
+        if not candidates:
+            # Fallback to first move if scoring failed
+            return top_moves[0]["Move"]
+
+        # Pick move with best noisy score
+        return max(candidates, key=lambda x: x[1])[0]
+
+    def _elo_to_sigma(self, elo: int) -> float:
+        """
+        Convert Elo rating to noise standard deviation.
+
+        Linear interpolation from MAX_SIGMA at MIN_ELO to 0 at MAX_ELO.
+
+        Args:
+            elo: Current Elo rating.
+
+        Returns:
+            Noise sigma in centipawns.
+        """
+        # Clamp elo to valid range
+        elo = max(self.MIN_ELO, min(self.MAX_ELO, elo))
+        # Linear interpolation
+        return self.MAX_SIGMA * (self.MAX_ELO - elo) / (self.MAX_ELO - self.MIN_ELO)
 
     def _parse_uci_move(
         self, uci: str
@@ -129,13 +216,16 @@ class AIPlayer:
 
     def set_elo(self, elo: int) -> None:
         """
-        Set the engine's ELO rating.
+        Set the AI's skill level (Elo rating).
+
+        The skill level controls how much noise is added to move evaluations.
+        At 2000 Elo, plays the best move. At lower Elo, increasingly likely
+        to pick suboptimal moves.
 
         Args:
-            elo: Target ELO rating.
+            elo: Target Elo rating (300-2000).
         """
-        self.elo = elo
-        self.engine.set_elo_rating(elo)
+        self.elo = max(self.MIN_ELO, min(self.MAX_ELO, elo))
 
     def quit(self) -> None:
         """Shut down the Stockfish engine."""

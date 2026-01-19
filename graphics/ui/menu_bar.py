@@ -63,6 +63,7 @@ class MenuBar:
         self.copy_fen_button: UIButton | None = None
         self.copy_pgn_button: UIButton | None = None
         self.reset_game_button: UIButton | None = None
+        self.settings_button: UIButton | None = None
         self.credits_button: UIButton | None = None
 
     def show_file_dropdown(self) -> None:
@@ -121,8 +122,8 @@ class MenuBar:
         self.hide_dropdown()
         button_bottom = self.game_button.relative_rect.bottom
 
-        # Create panel container for dropdown (1 item)
-        num_items = 1
+        # Create panel container for dropdown (2 items)
+        num_items = 2
         panel_height = num_items * DROPDOWN_ITEM_HEIGHT
         self.dropdown_panel = UIPanel(
             relative_rect=pygame.Rect(
@@ -132,14 +133,26 @@ class MenuBar:
             object_id="#dropdown_panel",
         )
 
+        item_size = (DROPDOWN_WIDTH, DROPDOWN_ITEM_HEIGHT)
+
         # Create Reset button
         self.reset_game_button = UIButton(
-            relative_rect=pygame.Rect((0, 0), (DROPDOWN_WIDTH, DROPDOWN_ITEM_HEIGHT)),
+            relative_rect=pygame.Rect((0, 0), item_size),
             text="Reset",
             manager=self.manager,
             container=self.dropdown_panel,
             object_id="#file_menu_item",
         )
+
+        # Create Settings button
+        self.settings_button = UIButton(
+            relative_rect=pygame.Rect((0, DROPDOWN_ITEM_HEIGHT), item_size),
+            text="Settings...",
+            manager=self.manager,
+            container=self.dropdown_panel,
+            object_id="#file_menu_item",
+        )
+
         self.active_menu = "game"
 
     def show_help_dropdown(self) -> None:
@@ -178,6 +191,7 @@ class MenuBar:
         self.copy_fen_button = None
         self.copy_pgn_button = None
         self.reset_game_button = None
+        self.settings_button = None
         self.credits_button = None
         self.active_menu = None
 
@@ -191,7 +205,7 @@ class MenuBar:
         Returns:
             Action string if an action was triggered, None otherwise.
             Possible actions: "load_fen", "load_pgn", "copy_fen", "copy_pgn",
-                            "reset_game", "show_credits"
+                            "reset_game", "show_settings", "show_credits"
         """
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             if event.ui_element == self.file_button:
@@ -224,6 +238,9 @@ class MenuBar:
             elif event.ui_element == self.reset_game_button:
                 self.hide_dropdown()
                 return "reset_game"
+            elif event.ui_element == self.settings_button:
+                self.hide_dropdown()
+                return "show_settings"
             elif event.ui_element == self.credits_button:
                 self.hide_dropdown()
                 return "show_credits"

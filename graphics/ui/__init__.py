@@ -6,6 +6,7 @@ from .promotion_dialog import PromotionDialog
 from .pgn_dialog import PGNDialog
 from .side_panel import SidePanel
 from .trie_panel import TriePanel
+from .settings_dialog import SettingsDialog
 
 __all__ = [
     "MenuBar",
@@ -17,4 +18,5 @@ __all__ = [
     "PGNDialog",
     "SidePanel",
     "TriePanel",
+    "SettingsDialog",
 ]
