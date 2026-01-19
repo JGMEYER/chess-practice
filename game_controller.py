@@ -57,8 +57,8 @@ class GameController:
         self._opening_trie = load_openings()
         self.current_opening: Opening | None = None
 
-        # Global AI mode toggle
-        self._ai_mode_enabled: bool = True
+        # Global AI mode toggle (off by default for practice mode)
+        self._ai_mode_enabled: bool = False
 
         self._init_ai()
         self.fen_loader.load_starting_position()
