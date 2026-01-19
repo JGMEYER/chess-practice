@@ -620,6 +620,12 @@ class TrieVisualization:
             if child is None:
                 break
 
+            # If filter is active, check if child is on the filter path
+            # If not, stop following the path (off-book move for this filter)
+            if self._filter_opening is not None:
+                if not self._node_is_on_filter_path(child):
+                    break
+
             child.path_index = i + 1
             self._current_path.append(child)
             node = child
