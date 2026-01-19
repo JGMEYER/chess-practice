@@ -170,6 +170,15 @@ class ArrowRenderer:
         For diagonal arrows, start from the corner area.
         """
         center = self._square_to_pixel_center(*from_sq)
+
+        # Calculate visual direction in screen coordinates
+        # Get pixel centers for both squares and compute screen-space direction
+        from_center = self._square_to_pixel_center(*from_sq)
+        to_center = self._square_to_pixel_center(*to_sq)
+        screen_dx = to_center[0] - from_center[0]
+        screen_dy = to_center[1] - from_center[1]
+
+        # Board coordinate deltas (for detecting move type)
         dx = to_sq[0] - from_sq[0]
         dy = to_sq[1] - from_sq[1]
 
@@ -179,32 +188,33 @@ class ArrowRenderer:
         # For knight moves (2+1 or 1+2), use the longer direction
         is_knight = (abs(dx), abs(dy)) in [(2, 1), (1, 2)]
         if is_knight and abs(dx) == 2:
-            # Horizontal is primary
-            offset_x = edge_dist if dx > 0 else -edge_dist
+            # Horizontal is primary - use screen_dx for direction
+            offset_x = edge_dist if screen_dx > 0 else -edge_dist
             offset_y = 0
         elif is_knight and abs(dy) == 2:
-            # Vertical is primary
+            # Vertical is primary - use screen_dy for direction
             offset_x = 0
-            offset_y = -edge_dist if dy > 0 else edge_dist
+            offset_y = edge_dist if screen_dy > 0 else -edge_dist
         elif dx == 0:
-            # Vertical straight arrow
+            # Vertical straight arrow - use screen_dy for direction
             offset_x = 0
-            offset_y = -edge_dist if dy > 0 else edge_dist
+            offset_y = edge_dist if screen_dy > 0 else -edge_dist
         elif dy == 0:
-            # Horizontal straight arrow
-            offset_x = edge_dist if dx > 0 else -edge_dist
+            # Horizontal straight arrow - use screen_dx for direction
+            offset_x = edge_dist if screen_dx > 0 else -edge_dist
             offset_y = 0
         else:
             # Diagonal arrow - start from the actual corner of the square
             # This makes diagonals pass through square corners naturally
-            corner_x = center[0] + (half if dx > 0 else -half)
-            corner_y = center[1] + (-half if dy > 0 else half)
+            # Use screen directions for visual correctness
+            corner_x = center[0] + (half if screen_dx > 0 else -half)
+            corner_y = center[1] + (half if screen_dy > 0 else -half)
 
             # Apply inset along diagonal direction to match visual depth of straight arrows
             # Use START_EDGE_INSET for each axis (not divided by sqrt(2)) so it looks
             # equally inset as horizontal/vertical arrows
-            inset_x = self.START_EDGE_INSET * (-1 if dx > 0 else 1)
-            inset_y = self.START_EDGE_INSET * (1 if dy > 0 else -1)
+            inset_x = self.START_EDGE_INSET * (-1 if screen_dx > 0 else 1)
+            inset_y = self.START_EDGE_INSET * (-1 if screen_dy > 0 else 1)
 
             return corner_x + inset_x, corner_y + inset_y
 
